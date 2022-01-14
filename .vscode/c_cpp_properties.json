@@ -3,8 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/Engine/src/**",
-                "${VULKAN_SDK}/include"
+                "${workspaceFolder}/Engine/src/**"
+                //"${VULKAN_SDK}/include"
             ],
             "defines": [
                 "_DEBUG",
