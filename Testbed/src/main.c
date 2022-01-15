@@ -1,6 +1,9 @@
 #include <Core/Logger.h>
 #include <Core/Asserts.h>
 
+// TODO: Test
+#include <Platform/Platform.h>
+
 int main(void)
 {
     TFATAL("A test message: %f", 3.14f);
@@ -10,7 +13,17 @@ int main(void)
     TDEBUG("A test message: %f", 3.14f);
     TTRACE("A test message: %f", 3.14f);
 
-    TASSERT(1 == 0);    
+    platform_state state;
+
+    if (PlatformStartup(&state, "Thrianta Test Window", 100, 100, 1280, 720))       
+    {
+        while (TRUE)
+        {
+            PlatformPumpMessages(&state);
+        }
+    }
+
+    PlatformShutdown(&state);
 
     return 0;
 }
