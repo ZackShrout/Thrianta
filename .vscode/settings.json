@@ -14,6 +14,6 @@
         "iosfwd": "c",
         "tuple": "cpp",
         "utility": "cpp",
-        "tmemory.h": "c"
+        "TMemory.h": "c"
     }
 }

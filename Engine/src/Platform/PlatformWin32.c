@@ -244,11 +244,11 @@ LRESULT CALLBACK Win32ProcMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM lPar
         } break;
         case WM_MOUSEWHEEL:
         {
-            // s32 z_delta = GET_WHEEL_DELTA_WPARAM(wParam);
-            // if (z_delta != 0)
+            // s32 zDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+            // if (zDelta != 0)
             // {
             //    // Flatten the input to an OS-independent (-1, 1)
-            //    z_delta = (z_delta < 0) ? -1 : 1;
+            //    zDelta = (zDelta < 0) ? -1 : 1;
             //    // TODO: input processing.
             // }
         } break;

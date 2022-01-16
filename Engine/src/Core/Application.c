@@ -4,6 +4,7 @@
 #include "Platform/Platform.h"
 #include "Core/TMemory.h"
 #include "Core/Event.h"
+#include "Core/Input.h"
 
 typedef struct application_state
 {
@@ -31,6 +32,7 @@ b8 ApplicationCreate(game* gameInst)
 
     // Initialize subsystems.
     InitializeLogging();
+    InputInitialize();
 
     // TODO: Remove this
     TFATAL("A test message: %f", 3.14f);
@@ -100,12 +102,19 @@ b8 ApplicationRun()
                 appState.isRunning = FALSE;
                 break;
             }
+
+            // NOTE: Input update/state copying should always be handled
+            // after any input should be recorded; I.E. before this line.
+            // As a safety, input is the last thing to be updated before
+            // this frame ends.
+            InputUpdate(0);
         }
     }
 
     appState.isRunning = FALSE;
 
     EventShutdown();
+    InputShutdown();
     PlatformShutdown(&appState.platform);
 
     return TRUE;
