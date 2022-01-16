@@ -20,6 +20,10 @@ typedef struct application_state
 static b8 initialized = FALSE;
 static application_state appState;
 
+// Event handlers
+b8 ApplicationOnEvent(u16 code, void* sender, void* listenerInst, event_context context);
+b8 ApplicationOnKey(u16 code, void* sender, void* listenerInst, event_context context);
+
 b8 ApplicationCreate(game* gameInst)
 {
     if (initialized)
@@ -50,6 +54,10 @@ b8 ApplicationCreate(game* gameInst)
         TERROR("Event system failed initialization. Application cannot continue.");
         return FALSE;
     }
+
+    EventRegister(EVENT_CODE_APPLICATION_QUIT, 0, ApplicationOnEvent);
+    EventRegister(EVENT_CODE_KEY_PRESSED, 0, ApplicationOnKey);
+    EventRegister(EVENT_CODE_KEY_RELEASED, 0, ApplicationOnKey);
 
     if (!PlatformStartup(
             &appState.platform,
@@ -113,9 +121,66 @@ b8 ApplicationRun()
 
     appState.isRunning = FALSE;
 
+    // Shutdown event system.
+    EventUnregister(EVENT_CODE_APPLICATION_QUIT, 0, ApplicationOnEvent);
+    EventUnregister(EVENT_CODE_KEY_PRESSED, 0, ApplicationOnKey);
+    EventUnregister(EVENT_CODE_KEY_RELEASED, 0, ApplicationOnKey);
     EventShutdown();
     InputShutdown();
     PlatformShutdown(&appState.platform);
 
     return TRUE;
+}
+
+b8 ApplicationOnEvent(u16 code, void* sender, void* listenerInst, event_context context) {
+    switch (code)
+    {
+        case EVENT_CODE_APPLICATION_QUIT:
+        {
+            TINFO("EVENT_CODE_APPLICATION_QUIT recieved, shutting down.\n");
+            appState.isRunning = FALSE;
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+b8 ApplicationOnKey(u16 code, void* sender, void* listenerInst, event_context context) {
+    if (code == EVENT_CODE_KEY_PRESSED)
+    {
+        u16 keyCode = context.data.u16[0];
+        if (keyCode == KEY_ESCAPE)
+        {
+            // NOTE: Technically firing an event to itself, but there may be other listeners.
+            event_context data = {};
+            EventFire(EVENT_CODE_APPLICATION_QUIT, 0, data);
+
+            // Block anything else from processing this.
+            return TRUE;
+        }
+        else if (keyCode == KEY_A)
+        {
+            // Example on checking for a key
+            TDEBUG("Explicit - A key pressed!");
+        }
+        else
+        {
+            TDEBUG("'%c' key pressed in window.", keyCode);
+        }
+    }
+    else if (code == EVENT_CODE_KEY_RELEASED)
+    {
+        u16 keyCode = context.data.u16[0];
+        if (keyCode == KEY_B)
+        {
+            // Example on checking for a key
+            TDEBUG("Explicit - B key released!");
+        }
+        else
+        {
+            TDEBUG("'%c' key released in window.", keyCode);
+        }
+    }
+    return FALSE;
 }

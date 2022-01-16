@@ -84,7 +84,7 @@ void InputProcessMouseMove(s16 x, s16 y)
     if (state.mouseCurrent.x != x || state.mouseCurrent.y != y)
     {
         // NOTE: Enable this if debugging.
-        //KDEBUG("Mouse pos: %i, %i!", x, y);
+        // TDEBUG("Mouse pos: %i, %i!", x, y);
 
         // Update internal state.
         state.mouseCurrent.x = x;
