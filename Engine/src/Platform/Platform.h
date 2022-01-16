@@ -6,7 +6,7 @@ typedef struct platform_state {
     void* internalState;
 } platform_state;
 
-TAPI  b8 PlatformStartup(
+b8 PlatformStartup(
     platform_state* platState,
     const char* applicationName,
     s32 x,
@@ -14,12 +14,12 @@ TAPI  b8 PlatformStartup(
     s32 width,
     s32 height);
 
-TAPI void PlatformShutdown(platform_state* platState);
+void PlatformShutdown(platform_state* platState);
 
-TAPI b8 PlatformPumpMessages(platform_state* platState);
+b8 PlatformPumpMessages(platform_state* platState);
 
-void* PlatformAllocate(u64 size, b8 aligned);
-void PlatformFree(void* block, b8 aligned);
+TAPI void* PlatformAllocate(u64 size, b8 aligned);
+TAPI void PlatformFree(void* block, b8 aligned);
 void* PlatformZeroMemory(void* block, u64 size);
 void* PlatformCopyMemory(void* dest, const void* source, u64 size);
 void* PlatformSetMemory(void* dest, s32 value, u64 size);
