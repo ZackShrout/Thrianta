@@ -11,6 +11,6 @@
         "windowsx.h": "c",
         "vulkan_platform.h": "c",
         "renderer_frontend.h": "c",
-        "asserts.h": "c"
+        "iosfwd": "c"
     }
 }
