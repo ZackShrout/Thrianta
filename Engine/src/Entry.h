@@ -2,6 +2,7 @@
 
 #include "Core/Application.h"
 #include "Core/Logger.h"
+#include "Core/TMemory.h"
 #include "GameTypes.h"
 
 // Externally-defined function to create a game.
@@ -10,7 +11,10 @@ extern b8 CreateGame(game* outGame);
 /**
  * The main entry point of the application.
  */
-int main(void) {
+int main(void)
+{
+    InitializeMemory();
+
     // Request the game instance from the application.
     game gameInst;
     if (!CreateGame(&gameInst)) {
@@ -35,6 +39,8 @@ int main(void) {
         TINFO("Application did not shutdown gracefully.");
         return 2;
     }
+
+    ShutdownMemory();
 
     return 0;
 }

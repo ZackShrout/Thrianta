@@ -2,6 +2,7 @@
 #include "GameTypes.h"
 #include "Logger.h"
 #include "Platform/Platform.h"
+#include "Core/TMemory.h"
 
 typedef struct application_state
 {
@@ -67,6 +68,8 @@ b8 ApplicationCreate(game* gameInst)
 
 b8 ApplicationRun()
 {
+    TINFO(GetMemoryUsageStr());
+
     while (appState.isRunning)
     {
         if(!PlatformPumpMessages(&appState.platform))

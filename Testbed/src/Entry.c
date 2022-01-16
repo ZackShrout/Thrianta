@@ -1,8 +1,6 @@
 #include "Game.h"
 #include <Entry.h>
-
-// TODO: Remove this
-#include <Platform/Platform.h>
+#include <Core/TMemory.h>
 
 // Define the function to create a game
 b8 CreateGame(game* outGame)
@@ -19,7 +17,7 @@ b8 CreateGame(game* outGame)
     outGame->OnResize = GameOnResize;
 
     // Create the game state.
-    outGame->state = PlatformAllocate(sizeof(game_state), FALSE);
+    outGame->state = TAllocate(sizeof(game_state), MEMORY_TAG_GAME);
 
     return TRUE;
 }
