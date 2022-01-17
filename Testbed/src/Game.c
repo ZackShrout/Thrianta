@@ -8,12 +8,12 @@ b8 GameInitialize(game* gameInst)
     return TRUE;
 }
 
-b8 GameUpdate(game* gameInst, f32 deltaTime)
+b8 GameUpdate(game* gameInst, f32 dt)
 {
     return TRUE;
 }
 
-b8 GameRender(game* gameInst, f32 deltaTime)
+b8 GameRender(game* gameInst, f32 dt)
 {
     return TRUE;
 }

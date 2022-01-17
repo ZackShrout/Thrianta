@@ -37,7 +37,7 @@ void InputShutdown()
     initialized = FALSE;
 }
 
-void InputUpdate(f64 deltaTime)
+void InputUpdate(f64 dt)
 {
     if (!initialized)
     {

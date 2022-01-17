@@ -6,6 +6,7 @@
 #include "Core/Event.h"
 #include "Core/Input.h"
 #include "Core/Clock.h"
+#include "Renderer/RendererFrontEnd.h"
 
 typedef struct application_state
 {
@@ -72,6 +73,12 @@ b8 ApplicationCreate(game* gameInst)
         return FALSE;
     }
 
+    // Renderer startup
+    if (!RendererInitialize(gameInst->appConfig.name, &appState.platform)) {
+        TFATAL("Failed to initialize renderer. Aborting application.");
+        return FALSE;
+    }
+
     // Initialize the game.
     if (!appState.gameInst->Initialize(appState.gameInst)) {
         TFATAL("Game failed to initialize.");
@@ -125,6 +132,11 @@ b8 ApplicationRun()
                 break;
             }
 
+            // TODO: refactor packet creation
+            render_packet packet;
+            packet.dt = delta;
+            RendererDrawFrame(&packet);
+
             // Figure our how long the frame took and, if below...
             f64 frameEndTime = PlatformGetAbsoluteTime();
             f64 frameElapsedTime = frameEndTime - frameStartTime;
@@ -164,6 +176,7 @@ b8 ApplicationRun()
     EventUnregister(EVENT_CODE_KEY_RELEASED, 0, ApplicationOnKey);
     EventShutdown();
     InputShutdown();
+    RendererShutdown();
     PlatformShutdown(&appState.platform);
 
     return TRUE;

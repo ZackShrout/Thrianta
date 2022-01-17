@@ -14,10 +14,10 @@ typedef struct game {
     b8 (*Initialize)(struct game* gameInst);
 
     // Function pointer to game's update function.
-    b8 (*Update)(struct game* gameInst, f32 deltaTime);
+    b8 (*Update)(struct game* gameInst, f32 dt);
 
     // Function pointer to game's render function.
-    b8 (*Render)(struct game* gameInst, f32 deltaTime);
+    b8 (*Render)(struct game* gameInst, f32 dt);
 
     // Function pointer to handle resizes, if applicable.
     void (*OnResize)(struct game* gameInst, u32 width, u32 height);

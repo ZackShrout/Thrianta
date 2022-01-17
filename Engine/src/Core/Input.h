@@ -146,7 +146,7 @@ typedef enum keys
 
 void InputInitialize();
 void InputShutdown();
-void InputUpdate(f64 deltaTime);
+void InputUpdate(f64 dt);
 
 // keyboard input
 TAPI b8 InputIsKeyDown(keys key);
