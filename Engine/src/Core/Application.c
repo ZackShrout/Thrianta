@@ -5,6 +5,7 @@
 #include "Core/TMemory.h"
 #include "Core/Event.h"
 #include "Core/Input.h"
+#include "Core/Clock.h"
 
 typedef struct application_state
 {
@@ -14,6 +15,7 @@ typedef struct application_state
     platform_state platform;
     s16 width;
     s16 height;
+    clock clock;
     f64 lastTime;
 } application_state;
 
@@ -85,6 +87,13 @@ b8 ApplicationCreate(game* gameInst)
 
 b8 ApplicationRun()
 {
+    ClockStart(&appState.clock);
+    ClockUpdate(&appState.clock);
+    appState.lastTime = appState.clock.elapsed;
+    f64 runningTime = 0;
+    u8 frameCount = 0;
+    f64 targetFrameSeconds = 1.0f / 60;
+    
     TINFO(GetMemoryUsageStr());
 
     while (appState.isRunning)
@@ -96,7 +105,12 @@ b8 ApplicationRun()
 
         if(!appState.isSuspended)
         {
-            if (!appState.gameInst->Update(appState.gameInst, (f32)0))
+            ClockUpdate(&appState.clock);
+            f64 currentTime = appState.clock.elapsed;
+            f64 delta = currentTime - appState.lastTime;
+            f64 frameStartTime = PlatformGetAbsoluteTime();
+            
+            if (!appState.gameInst->Update(appState.gameInst, (f32)delta))
             {
                 TFATAL("Game update failed, shutting down.");
                 appState.isRunning = FALSE;
@@ -104,18 +118,41 @@ b8 ApplicationRun()
             }
 
             // Call the game's render routine.
-            if (!appState.gameInst->Render(appState.gameInst, (f32)0))
+            if (!appState.gameInst->Render(appState.gameInst, (f32)delta))
             {
                 TFATAL("Game render failed, shutting down.");
                 appState.isRunning = FALSE;
                 break;
             }
 
+            // Figure our how long the frame took and, if below...
+            f64 frameEndTime = PlatformGetAbsoluteTime();
+            f64 frameElapsedTime = frameEndTime - frameStartTime;
+            runningTime += frameElapsedTime;
+            f64 remainingSeconds = targetFrameSeconds - frameElapsedTime;
+
+            if (remainingSeconds > 0)
+            {
+                u64 remainingMs = remainingSeconds * 1000;
+
+                // If there is time left, give it back to the OS
+                b8 limitFrames = FALSE;
+                if (remainingMs > 0 && limitFrames)
+                {
+                    PlatformSleep(remainingMs - 1);
+                }
+
+                frameCount++;
+            }
+
             // NOTE: Input update/state copying should always be handled
             // after any input should be recorded; I.E. before this line.
             // As a safety, input is the last thing to be updated before
             // this frame ends.
-            InputUpdate(0);
+            InputUpdate(delta);
+
+            // Update last time
+            appState.lastTime = currentTime;
         }
     }
 

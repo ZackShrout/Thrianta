@@ -4,7 +4,7 @@
 #include "Platform/Platform.h"
 
 // TODO: Custom string lib
-//#include <string.h>
+#include <string.h>
 #include <stdio.h>
 
 struct memory_stats
