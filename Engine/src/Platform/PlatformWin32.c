@@ -1,10 +1,11 @@
 #include "Platform/Platform.h"
-#include "Core/Input.h"
 
 // Windows platform layer.
 #if TPLATFORM_WINDOWS
 
 #include "Core/Logger.h"
+#include "Core/Input.h"
+#include "Containers/DArray.h"
 
 #include <windows.h>
 #include <windowsx.h>  // param input extraction
@@ -201,6 +202,11 @@ f64 PlatformGetAbsoluteTime()
 void PlatformSleep(u64 ms)
 {
     Sleep(ms);
+}
+
+void PlatformGetRequiredExtensionNames(const char ***namesDArray)
+{
+    DArrayPush(*namesDArray, &"VK_KHR_win32_surface");
 }
 
 LRESULT CALLBACK Win32ProcMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM lParam)

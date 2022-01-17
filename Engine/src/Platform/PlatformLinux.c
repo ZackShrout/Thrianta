@@ -6,6 +6,7 @@
 #include "Core/Logger.h"
 #include "Core/Event.h"
 #include "Core/Input.h"
+#include "Containers/DArray.h"
 
 #include <xcb/xcb.h>
 #include <X11/keysym.h>
@@ -337,6 +338,11 @@ void PlatformSleep(u64 ms)
     }
     usleep((ms % 1000) * 1000);
 #endif
+}
+
+void PlatformGetRequiredExtensionNames(const char ***namesDArray)
+{
+    DArrayPush(*namesDArray, &"VK_KHR_xcb_surface");
 }
 
 // Key translation

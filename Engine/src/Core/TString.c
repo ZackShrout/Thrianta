@@ -15,3 +15,9 @@ char* StringDuplicate(const char* str)
     TCopyMemory(copy, str, length + 1);
     return copy;
 }
+
+// Case-sensitive string comparison. True if the same, otherwise false.
+b8 StringsEqual(const char* str0, const char* str1)
+{
+    return strcmp(str0, str1) == 0;
+}
