@@ -9,10 +9,10 @@
 static vulkan_context context;
 
 VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
-    VkDebugUtilsMessageTypeFlagsEXT message_types,
-    const VkDebugUtilsMessengerCallbackDataEXT* callback_data,
-    void* user_data);
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+    const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
+    void* userData);
 
 b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applicationName, struct platform_state* platState)
 {
@@ -39,16 +39,16 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
 
     TDEBUG("Required extensions:");
     u32 length = DArrayLength(requiredExtensions);
-    for (u32 i = 0; i < length; ++i)
+    for (u32 i = 0; i < length; i++)
         TDEBUG(requiredExtensions[i]);
-#endif
+#endif // _DEBUG
 
     createInfo.enabledExtensionCount = DArrayLength(requiredExtensions);
     createInfo.ppEnabledExtensionNames = requiredExtensions;
-// TODO: reformat ******************************************************************************************
+
     // Validation layers.
-    const char** required_validation_layer_names = 0;
-    u32 required_validation_layer_count = 0;
+    const char** requiredValidationLayerNames = 0;
+    u32 requiredValidationLayerCount = 0;
 
     // If validation should be done, get a list of the required validation layert names
     // and make sure they exist. Validation layers should only be enabled on non-release builds.
@@ -56,24 +56,24 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     TINFO("Validation layers enabled. Enumerating...");
 
     // The list of validation layers required.
-    required_validation_layer_names = DArrayCreate(const char*);
-    DArrayPush(required_validation_layer_names, &"VK_LAYER_KHRONOS_validation");
-    required_validation_layer_count = DArrayLength(required_validation_layer_names);
+    requiredValidationLayerNames = DArrayCreate(const char*);
+    DArrayPush(requiredValidationLayerNames, &"VK_LAYER_KHRONOS_validation");
+    requiredValidationLayerCount = DArrayLength(requiredValidationLayerNames);
 
     // Obtain a list of available validation layers
-    u32 available_layer_count = 0;
-    VK_CHECK(vkEnumerateInstanceLayerProperties(&available_layer_count, 0));
-    VkLayerProperties* available_layers = DArrayReserve(VkLayerProperties, available_layer_count);
-    VK_CHECK(vkEnumerateInstanceLayerProperties(&available_layer_count, available_layers));
+    u32 availableLayerCount = 0;
+    VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, 0));
+    VkLayerProperties* availableLayers = DArrayReserve(VkLayerProperties, availableLayerCount);
+    VK_CHECK(vkEnumerateInstanceLayerProperties(&availableLayerCount, availableLayers));
 
     // Verify all required layers are available.
-    for (u32 i = 0; i < required_validation_layer_count; ++i)
+    for (u32 i = 0; i < requiredValidationLayerCount; i++)
     {
-        TINFO("Searching for layer: %s...", required_validation_layer_names[i]);
+        TINFO("Searching for layer: %s...", requiredValidationLayerNames[i]);
         b8 found = FALSE;
-        for (u32 j = 0; j < available_layer_count; ++j)
+        for (u32 j = 0; j < availableLayerCount; j++)
         {
-            if (StringsEqual(required_validation_layer_names[i], available_layers[j].layerName))
+            if (StringsEqual(requiredValidationLayerNames[i], availableLayers[j].layerName))
             {
                 found = TRUE;
                 TINFO("Found.");
@@ -83,15 +83,15 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
 
         if (!found)
         {
-            TFATAL("Required validation layer is missing: %s", required_validation_layer_names[i]);
+            TFATAL("Required validation layer is missing: %s", requiredValidationLayerNames[i]);
             return FALSE;
         }
     }
     TINFO("All required validation layers are present.");
-#endif
+#endif // _DEBUG
 
-    createInfo.enabledLayerCount = required_validation_layer_count;
-    createInfo.ppEnabledLayerNames = required_validation_layer_names;
+    createInfo.enabledLayerCount = requiredValidationLayerCount;
+    createInfo.ppEnabledLayerNames = requiredValidationLayerNames;
 
     VK_CHECK(vkCreateInstance(&createInfo, context.allocator, &context.instance));
     TINFO("Vulkan Instance created.");
@@ -99,22 +99,22 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     // Debugger
 #if defined(_DEBUG)
     TDEBUG("Creating Vulkan debugger...");
-    u32 log_severity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+    u32 logSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
                        VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
                        VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;  //|
                                                                       //    VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
 
-    VkDebugUtilsMessengerCreateInfoEXT debug_create_info = {VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
-    debug_create_info.messageSeverity = log_severity;
-    debug_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
-    debug_create_info.pfnUserCallback = VKDebugCallback;
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
+    debugCreateInfo.messageSeverity = logSeverity;
+    debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+    debugCreateInfo.pfnUserCallback = VKDebugCallback;
 
     PFN_vkCreateDebugUtilsMessengerEXT func =
         (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
     TASSERT_MSG(func, "Failed to create debug messenger!");
-    VK_CHECK(func(context.instance, &debug_create_info, context.allocator, &context.debug_messenger));
+    VK_CHECK(func(context.instance, &debugCreateInfo, context.allocator, &context.debugMessenger));
     TDEBUG("Vulkan debugger created.");
-#endif
+#endif // _DEBUG
 
     TINFO("Vulkan renderer initialized successfully.");
     return TRUE;
@@ -123,11 +123,11 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
 void VulkanRendererBackendShutdown(renderer_backend* backend)
 {
     TDEBUG("Destroying Vulkan debugger...");
-    if (context.debug_messenger)
+    if (context.debugMessenger)
     {
         PFN_vkDestroyDebugUtilsMessengerEXT func =
             (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkDestroyDebugUtilsMessengerEXT");
-        func(context.instance, context.debug_messenger, context.allocator);
+        func(context.instance, context.debugMessenger, context.allocator);
     }
 
     TDEBUG("Destroying Vulkan instance...");
@@ -149,23 +149,23 @@ b8 VulkanRendererBackendEndFrame(renderer_backend* backend, f32 dt)
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
-    VkDebugUtilsMessageTypeFlagsEXT message_types,
-    const VkDebugUtilsMessengerCallbackDataEXT* callback_data,
-    void* user_data) {
-    switch (message_severity) {
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageTypes,
+    const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
+    void* userData) {
+    switch (messageSeverity) {
         default:
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-            TERROR(callback_data->pMessage);
+            TERROR(callbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-            TWARN(callback_data->pMessage);
+            TWARN(callbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-            TINFO(callback_data->pMessage);
+            TINFO(callbackData->pMessage);
             break;
         case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-            TTRACE(callback_data->pMessage);
+            TTRACE(callbackData->pMessage);
             break;
     }
     return VK_FALSE;
