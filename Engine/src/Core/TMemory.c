@@ -1,10 +1,10 @@
 #include "TMemory.h"
-
+#include "Core/TString.h"
 #include "Core/Logger.h"
 #include "Platform/Platform.h"
 
 // TODO: Custom string lib
-#include <string.h>
+//#include <string.h>
 #include <stdio.h>
 
 struct memory_stats
@@ -126,6 +126,6 @@ char* GetMemoryUsageStr()
         offset += length;
     }
     // TODO: This is a memory leak danger
-    char* outString = _strdup(buffer);
+    char* outString = StringDuplicate(buffer);
     return outString;
 }

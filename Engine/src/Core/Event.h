@@ -7,18 +7,18 @@ typedef struct event_context
     // 128 bytes
     union
     {
-        s64 i64[2];
+        s64 s64[2];
         u64 u64[2];
         f64 f64[2];
 
-        s32 i32[4];
+        s32 s32[4];
         u32 u32[4];
         f32 f32[4];
 
-        s16 i16[8];
+        s16 s16[8];
         u16 u16[8];
 
-        s8 i8[16];
+        s8 s8[16];
         u8 u8[16];
 
         char c[16];
