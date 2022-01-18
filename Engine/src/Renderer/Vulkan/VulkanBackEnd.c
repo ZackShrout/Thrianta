@@ -2,6 +2,7 @@
 #include "VulkanTypes.inl"
 #include "VulkanPlatform.h"
 #include "VulkanDevice.h"
+#include "VulkanSwapchain.h"
 #include "Core/Logger.h"
 #include "Core/TString.h"
 #include "Containers/DArray.h"
@@ -15,8 +16,13 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
     void* userData);
 
+s32 FindMemoryIndex(u32 typeFilter, u32 propertyFlags);
+
 b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applicationName, struct platform_state* platState)
 {
+    // Function pointers
+    context.FindMemoryIndex = FindMemoryIndex;
+    
     // TODO: custom allocator.
     context.allocator = 0;
 
@@ -132,6 +138,13 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
         TERROR("Failed to create device!");
         return FALSE;
     }
+
+    // Swapchain
+    VulkanSwapchainCreate(
+        &context,
+        context.framebufferWidth,
+        context.framebufferHeight,
+        &context.swapchain);
     
     TINFO("Vulkan renderer initialized successfully.");
     return TRUE;
@@ -139,6 +152,20 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
 
 void VulkanRendererBackendShutdown(renderer_backend* backend)
 {
+    // Destroy in the opposite order of creation.
+
+    // Swapchain
+    VulkanSwapchainDestroy(&context, &context.swapchain);
+
+    TDEBUG("Destroying Vulkan device...");
+    VulkanDeviceDestroy(&context);
+
+    TDEBUG("Destroying Vulkan surface...");
+    if (context.surface) {
+        vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
+        context.surface = 0;
+    }
+    
     TDEBUG("Destroying Vulkan debugger...");
     if (context.debugMessenger)
     {
@@ -186,4 +213,22 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
             break;
     }
     return VK_FALSE;
+}
+
+s32 FindMemoryIndex(u32 typeFilter, u32 propertyFlags)
+{
+    VkPhysicalDeviceMemoryProperties memory_properties;
+    vkGetPhysicalDeviceMemoryProperties(context.device.physicalDevice, &memory_properties);
+
+    for (u32 i = 0; i < memory_properties.memoryTypeCount; i++)
+    {
+        // Check each memory type to see if its bit is set to 1.
+        if (typeFilter & (1 << i) && (memory_properties.memoryTypes[i].propertyFlags & propertyFlags) == propertyFlags)
+        {
+            return i;
+        }
+    }
+
+    TWARN("Unable to find suitable memory type!");
+    return -1;
 }

@@ -98,3 +98,5 @@ STATIC_ASSERT(sizeof(f64) == 8, "Expected f64 to be 8 byte.");
 #define TAPI
 #endif // _MSC_VER
 #endif // TEXPORT
+
+#define TCLAMP(value, min, max) (value <= min) ? min : (value >= max) ? max : value;
