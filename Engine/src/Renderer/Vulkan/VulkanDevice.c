@@ -41,10 +41,146 @@ b8 VulkanDeviceCreate(vulkan_context* context)
         return FALSE;
     }
 
+    TINFO("Creating logical device...");
+    // NOTE: Do not create additional queues for shared indices.
+    b8 presentSharesGraphicsQueue = context->device.graphicsQueueIndex == context->device.presentQueueIndex;
+    b8 transferSharesGraphicsQueue = context->device.graphicsQueueIndex == context->device.transferQueueIndex;
+    b8 transferSharesPresentQueue = context->device.transferQueueIndex == context->device.presentQueueIndex;
+    u32 indexCount = 0;
+    if (!presentSharesGraphicsQueue)
+    {
+        indexCount++;
+    }
+    if (!transferSharesGraphicsQueue)
+    {
+        indexCount++;
+    }
+    if (!transferSharesPresentQueue)
+    {
+        indexCount++;
+    }
+    u32 indices[indexCount];
+    u8 index = 0;
+    indices[index++] = context->device.graphicsQueueIndex;
+    if (!presentSharesGraphicsQueue)
+    {
+        indices[index++] = context->device.presentQueueIndex;
+    }
+    if (!transferSharesGraphicsQueue && !transferSharesPresentQueue)
+    {
+        indices[index++] = context->device.transferQueueIndex;
+    }
+
+    VkDeviceQueueCreateInfo queueCreateInfos[indexCount];
+    for (u32 i = 0; i < indexCount; ++i)
+    {
+        queueCreateInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfos[i].queueFamilyIndex = indices[i];
+        queueCreateInfos[i].queueCount = 1;
+        // TODO: This is here for future multithreading, but will be handle better at that time
+        // if (indices[i] == context->device.graphicsQueueIndex)
+        // {
+        //     queueCreateInfos[i].queueCount = 2;
+        // }
+        queueCreateInfos[i].flags = 0;
+        queueCreateInfos[i].pNext = 0;
+        f32 queuePriority = 1.0f;
+        queueCreateInfos[i].pQueuePriorities = &queuePriority;
+    }
+
+    // Request device features.
+    // TODO: should be config driven
+    VkPhysicalDeviceFeatures deviceFeatures = {};
+    deviceFeatures.samplerAnisotropy = VK_TRUE;  // Request anistrophy
+
+    VkDeviceCreateInfo deviceCreateInfo = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
+    deviceCreateInfo.queueCreateInfoCount = indexCount;
+    deviceCreateInfo.pQueueCreateInfos = queueCreateInfos;
+    deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
+    deviceCreateInfo.enabledExtensionCount = 1;
+    const char* extensionNames = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+    deviceCreateInfo.ppEnabledExtensionNames = &extensionNames;
+
+    // Deprecated and ignored, so pass nothing.
+    deviceCreateInfo.enabledLayerCount = 0;
+    deviceCreateInfo.ppEnabledLayerNames = 0;
+
+    // Create the device.
+    VK_CHECK(vkCreateDevice(
+        context->device.physicalDevice,
+        &deviceCreateInfo,
+        context->allocator,
+        &context->device.logicalDevice));
+
+    TINFO("Logical device created.");
+
+    // Get queues.
+    vkGetDeviceQueue(
+        context->device.logicalDevice,
+        context->device.graphicsQueueIndex,
+        0,
+        &context->device.graphicsQueue);
+
+    vkGetDeviceQueue(
+        context->device.logicalDevice,
+        context->device.presentQueueIndex,
+        0,
+        &context->device.presentQueue);
+
+    vkGetDeviceQueue(
+        context->device.logicalDevice,
+        context->device.transferQueueIndex,
+        0,
+        &context->device.transferQueue);
+    TINFO("Queues obtained.");
+
     return TRUE;
 }
 
-void VulkanDeviceDestroy(vulkan_context* context) {}
+void VulkanDeviceDestroy(vulkan_context* context)
+{
+    // Unset queues
+    context->device.graphicsQueue = 0;
+    context->device.presentQueue = 0;
+    context->device.transferQueue = 0;
+
+    // Destroy logical device
+    TINFO("Destroying logical device...");
+    if (context->device.logicalDevice) {
+        vkDestroyDevice(context->device.logicalDevice, context->allocator);
+        context->device.logicalDevice = 0;
+    }
+
+    // Physical devices are not destroyed.
+    TINFO("Releasing physical device resources...");
+    context->device.physicalDevice = 0;
+
+    if (context->device.swapchainSupport.formats) {
+        TFree(
+            context->device.swapchainSupport.formats,
+            sizeof(VkSurfaceFormatKHR) * context->device.swapchainSupport.formatCount,
+            MEMORY_TAG_RENDERER);
+        context->device.swapchainSupport.formats = 0;
+        context->device.swapchainSupport.formatCount = 0;
+    }
+
+    if (context->device.swapchainSupport.presentModes) {
+        TFree(
+            context->device.swapchainSupport.presentModes,
+            sizeof(VkPresentModeKHR) * context->device.swapchainSupport.presentModeCount,
+            MEMORY_TAG_RENDERER);
+        context->device.swapchainSupport.presentModes = 0;
+        context->device.swapchainSupport.presentModeCount = 0;
+    }
+
+    TZeroMemory(
+        &context->device.swapchainSupport.capabilities,
+        sizeof(context->device.swapchainSupport.capabilities));
+
+    context->device.graphicsQueueIndex = -1;
+    context->device.presentQueueIndex = -1;
+    context->device.transferQueueIndex = -1;
+}
 
 void VulkanDeviceQuerySwapchainSupport(
     VkPhysicalDevice physicalDevice,
