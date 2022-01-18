@@ -1,9 +1,10 @@
 #include "VulkanBackEnd.h"
 #include "VulkanTypes.inl"
+#include "VulkanPlatform.h"
+#include "VulkanDevice.h"
 #include "Core/Logger.h"
 #include "Core/TString.h"
 #include "Containers/DArray.h"
-#include "VulkanPlatform.h"
 
 // static Vulkan context
 static vulkan_context context;
@@ -116,6 +117,22 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     TDEBUG("Vulkan debugger created.");
 #endif // _DEBUG
 
+    // Surface
+    TDEBUG("Creating Vulkan surface...");
+    if (!PlatformCreateVulkanSurface(platState, &context))
+    {
+        TERROR("Failed to create platform surface!");
+        return FALSE;
+    }
+    TDEBUG("Vulkan surface created.");
+
+    // Device creation
+    if (!VulkanDeviceCreate(&context))
+    {
+        TERROR("Failed to create device!");
+        return FALSE;
+    }
+    
     TINFO("Vulkan renderer initialized successfully.");
     return TRUE;
 }
