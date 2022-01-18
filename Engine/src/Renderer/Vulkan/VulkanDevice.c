@@ -46,7 +46,7 @@ b8 VulkanDeviceCreate(vulkan_context* context)
     b8 presentSharesGraphicsQueue = context->device.graphicsQueueIndex == context->device.presentQueueIndex;
     b8 transferSharesGraphicsQueue = context->device.graphicsQueueIndex == context->device.transferQueueIndex;
     b8 transferSharesPresentQueue = context->device.transferQueueIndex == context->device.presentQueueIndex;
-    u32 indexCount = 0;
+    u32 indexCount = 1;
     if (!presentSharesGraphicsQueue)
     {
         indexCount++;
@@ -55,9 +55,9 @@ b8 VulkanDeviceCreate(vulkan_context* context)
     {
         indexCount++;
     }
-    if (!transferSharesPresentQueue)
+    if (transferSharesPresentQueue)
     {
-        indexCount++;
+        indexCount--;
     }
     u32 indices[indexCount];
     u8 index = 0;
