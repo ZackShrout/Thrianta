@@ -5,13 +5,18 @@
 #include "VulkanSwapchain.h"
 #include "VulkanRenderpass.h"
 #include "VulkanCommandBuffer.h"
+#include "VulkanFramebuffer.h"
+#include "VulkanFence.h"
 #include "Core/Logger.h"
 #include "Core/TMemory.h"
 #include "Core/TString.h"
+#include "Core/Application.h"
 #include "Containers/DArray.h"
 
 // static Vulkan context
 static vulkan_context context;
+static u32 cachedFramebufferWidth;
+static u32 cachedFramebufferHeight;
 
 VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -22,6 +27,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
 s32 FindMemoryIndex(u32 typeFilter, u32 propertyFlags);
 
 void CreateCommandBuffers(renderer_backend* backend);
+void RegenerateFramebuffers(renderer_backend* backend, vulkan_swapchain* swapchain, vulkan_renderpass* renderpass);
 
 b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applicationName, struct platform_state* platState)
 {
@@ -30,6 +36,12 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     
     // TODO: custom allocator.
     context.allocator = 0;
+
+    ApplicationGetFramebufferSize(&cachedFramebufferWidth, &cachedFramebufferHeight);
+    context.framebufferWidth = (cachedFramebufferWidth != 0) ? cachedFramebufferWidth : 800;
+    context.framebufferHeight = (cachedFramebufferHeight != 0) ? cachedFramebufferHeight : 600;
+    cachedFramebufferWidth = 0;
+    cachedFramebufferHeight = 0;
 
     // Setup Vulkan instance.
     VkApplicationInfo appInfo = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
@@ -160,8 +172,38 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
         1.0f,
         0);
 
+    // Swapchain framebuffers.
+    context.swapchain.framebuffers = DArrayReserve(vulkan_framebuffer, context.swapchain.imageCount);
+    RegenerateFramebuffers(backend, &context.swapchain, &context.mainRenderpass);
+
     // Create command buffers.
     CreateCommandBuffers(backend);
+
+    // Create sync objects.
+    context.imageAvailableSemaphores = DArrayReserve(VkSemaphore, context.swapchain.maxFramesInFlight);
+    context.queueCompleteSemaphores = DArrayReserve(VkSemaphore, context.swapchain.maxFramesInFlight);
+    context.inFlightFences = DArrayReserve(vulkan_fence, context.swapchain.maxFramesInFlight);
+
+    for (u8 i = 0; i < context.swapchain.maxFramesInFlight; i++)
+    {
+        VkSemaphoreCreateInfo semaphoreCreateInfo = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+        vkCreateSemaphore(context.device.logicalDevice, &semaphoreCreateInfo, context.allocator, &context.imageAvailableSemaphores[i]);
+        vkCreateSemaphore(context.device.logicalDevice, &semaphoreCreateInfo, context.allocator, &context.queueCompleteSemaphores[i]);
+
+        // Create the fence in a signaled state, indicating that the first frame has already been "rendered".
+        // This will prevent the application from waiting indefinitely for the first frame to render since it
+        // cannot be rendered until a frame is "rendered" before it.
+        VulkanFenceCreate(&context, TRUE, &context.inFlightFences[i]);
+    }
+
+    // In flight fences should not yet exist at this point, so clear the list. These are stored in pointers
+    // because the initial state should be 0, and will be 0 when not in use. Acutal fences are not owned
+    // by this list.
+    context.imagesInFlight = DArrayReserve(vulkan_fence, context.swapchain.imageCount);
+    for (u32 i = 0; i < context.swapchain.imageCount; i++)
+    {
+        context.imagesInFlight[i] = 0;
+    }
     
     TINFO("Vulkan renderer initialized successfully.");
     return TRUE;
@@ -169,7 +211,42 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
 
 void VulkanRendererBackendShutdown(renderer_backend* backend)
 {
+    vkDeviceWaitIdle(context.device.logicalDevice);
+    
     // Destroy in the opposite order of creation.
+
+    // Sync objects
+    for (u8 i = 0; i < context.swapchain.maxFramesInFlight; i++)
+    {
+        if (context.imageAvailableSemaphores[i])
+        {
+            vkDestroySemaphore(
+                context.device.logicalDevice,
+                context.imageAvailableSemaphores[i],
+                context.allocator);
+            context.imageAvailableSemaphores[i] = 0;
+        }
+        if (context.queueCompleteSemaphores[i])
+        {
+            vkDestroySemaphore(
+                context.device.logicalDevice,
+                context.queueCompleteSemaphores[i],
+                context.allocator);
+            context.queueCompleteSemaphores[i] = 0;
+        }
+        VulkanFenceDestroy(&context, &context.inFlightFences[i]);
+    }
+    DArrayDestroy(context.imageAvailableSemaphores);
+    context.imageAvailableSemaphores = 0;
+
+    DArrayDestroy(context.queueCompleteSemaphores);
+    context.queueCompleteSemaphores = 0;
+
+    DArrayDestroy(context.inFlightFences);
+    context.inFlightFences = 0;
+
+    DArrayDestroy(context.imagesInFlight);
+    context.imagesInFlight = 0;
 
     // Command buffers
     for (u32 i = 0; i < context.swapchain.imageCount; i++)
@@ -185,6 +262,12 @@ void VulkanRendererBackendShutdown(renderer_backend* backend)
     }
     DArrayDestroy(context.graphicsCommandBuffers);
     context.graphicsCommandBuffers = 0;
+
+    // Destroy framebuffers
+    for (u32 i = 0; i < context.swapchain.imageCount; i++)
+    {
+        VulkanFramebufferDestroy(&context, &context.swapchain.framebuffers[i]);
+    }
 
     // Renderpass
     VulkanRenderpassDestroy(&context, &context.mainRenderpass);
@@ -297,4 +380,24 @@ void CreateCommandBuffers(renderer_backend* backend)
     }
 
     TINFO("Vulkan command buffers created.");
+}
+
+void RegenerateFramebuffers(renderer_backend* backend, vulkan_swapchain* swapchain, vulkan_renderpass* renderpass) {
+    for (u32 i = 0; i < swapchain->imageCount; i++)
+    {
+        // TODO: make this dynamic based on the currently configured attachments
+        u32 attachmentCount = 2;
+        VkImageView attachments[] = {
+            swapchain->views[i],
+            swapchain->depthAttachment.view};
+
+        VulkanFramebufferCreate(
+            &context,
+            renderpass,
+            context.framebufferWidth,
+            context.framebufferHeight,
+            attachmentCount,
+            attachments,
+            &context.swapchain.framebuffers[i]);
+    }
 }

@@ -20,5 +20,5 @@ typedef struct application_config {
 
 
 TAPI b8 ApplicationCreate(struct game* gameInst);
-
 TAPI b8 ApplicationRun();
+void ApplicationGetFramebufferSize(u32* width, u32* height);

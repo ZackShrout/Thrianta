@@ -182,6 +182,11 @@ b8 ApplicationRun()
     return TRUE;
 }
 
+void ApplicationGetFramebufferSize(u32* width, u32* height) {
+    *width = appState.width;
+    *height = appState.height;
+}
+
 b8 ApplicationOnEvent(u16 code, void* sender, void* listenerInst, event_context context) {
     switch (code)
     {

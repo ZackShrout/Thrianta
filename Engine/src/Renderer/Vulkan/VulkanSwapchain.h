@@ -21,7 +21,7 @@ b8 VulkanSwapchainAquireNextImageIndex(
     vulkan_context* context,
     vulkan_swapchain* swapchain,
     u64 timeoutNS,
-    VkSemaphore imageAvailableSemaphore,
+    VkSemaphore imageAvailableSemaphores,
     VkFence fence,
     u32* outImageIndex);
 

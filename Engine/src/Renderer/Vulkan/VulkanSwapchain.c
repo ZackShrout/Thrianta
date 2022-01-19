@@ -39,7 +39,7 @@ b8 VulkanSwapchainAquireNextImageIndex(
     vulkan_context* context,
     vulkan_swapchain* swapchain,
     u64 timeoutNS,
-    VkSemaphore imageAvailableSemaphore,
+    VkSemaphore imageAvailableSemaphores,
     VkFence fence,
     u32* outImageIndex)
 {
@@ -47,7 +47,7 @@ b8 VulkanSwapchainAquireNextImageIndex(
         context->device.logicalDevice,
         swapchain->handle,
         timeoutNS,
-        imageAvailableSemaphore,
+        imageAvailableSemaphores,
         fence,
         outImageIndex);
 
@@ -93,6 +93,9 @@ void VulkanSwapchainPresent(
     {
         TFATAL("Failed to present swap chain image!");
     }
+
+    // Increment (and loop) the index.
+    context->currentFrame = (context->currentFrame + 1) % swapchain->maxFramesInFlight;
 }
 
 void Create(vulkan_context* context, u32 width, u32 height, vulkan_swapchain* swapchain)
