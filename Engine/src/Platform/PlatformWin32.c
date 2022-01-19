@@ -5,6 +5,7 @@
 
 #include "Core/Logger.h"
 #include "Core/Input.h"
+#include "Core/Event.h"
 #include "Containers/DArray.h"
 
 #include <windows.h>
@@ -244,8 +245,9 @@ LRESULT CALLBACK Win32ProcMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM lPar
             // Notify the OS that erasing will be handled by the application to prevent flicker.
             return 1;
         case WM_CLOSE:
-            // TODO: Fire an event for the application to quit.
-            return 0;
+            event_context data = {};
+            EventFire(EVENT_CODE_APPLICATION_QUIT, 0, data);
+            return TRUE;
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;

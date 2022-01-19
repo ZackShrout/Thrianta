@@ -31,6 +31,7 @@ typedef struct vulkan_device
     VkQueue graphicsQueue;
     VkQueue presentQueue;
     VkQueue transferQueue;
+    VkCommandPool graphicsCommandPool;
     VkPhysicalDeviceProperties properties;
     VkPhysicalDeviceFeatures features;
     VkPhysicalDeviceMemoryProperties memory;
@@ -61,10 +62,8 @@ typedef struct vulkan_renderpass
     VkRenderPass handle;
     f32 x, y, w, h;
     f32 r, g, b, a;
-
     f32 depth;
     u32 stencil;
-
     vulkan_render_pass_state state;
 } vulkan_renderpass;
 
@@ -92,9 +91,7 @@ typedef enum vulkan_command_buffer_state
 typedef struct vulkan_command_buffer
 {
     VkCommandBuffer handle;
-
-    // Command buffer state.
-    vulkan_command_buffer_state state;
+    vulkan_command_buffer_state state; // Command buffer state.
 } vulkan_command_buffer;
 
 typedef struct vulkan_context
@@ -107,6 +104,7 @@ typedef struct vulkan_context
     vulkan_device device;
     vulkan_swapchain swapchain;
     vulkan_renderpass mainRenderpass;
+    vulkan_command_buffer* graphicsCommandBuffers; // darray
     u32 imageIndex;
     u32 currentFrame;
     b8 recreatingSwapchain;

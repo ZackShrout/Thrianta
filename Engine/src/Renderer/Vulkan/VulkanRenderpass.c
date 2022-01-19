@@ -114,13 +114,13 @@ void VulkanRenderpassBegin(
     vulkan_renderpass* renderpass,
     VkFramebuffer frameBuffer)
 {
-    VkRenderPassBeginInfo begin_info = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
-    begin_info.renderPass = renderpass->handle;
-    begin_info.framebuffer = frameBuffer;
-    begin_info.renderArea.offset.x = renderpass->x;
-    begin_info.renderArea.offset.y = renderpass->y;
-    begin_info.renderArea.extent.width = renderpass->w;
-    begin_info.renderArea.extent.height = renderpass->h;
+    VkRenderPassBeginInfo beginInfo = {VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO};
+    beginInfo.renderPass = renderpass->handle;
+    beginInfo.framebuffer = frameBuffer;
+    beginInfo.renderArea.offset.x = renderpass->x;
+    beginInfo.renderArea.offset.y = renderpass->y;
+    beginInfo.renderArea.extent.width = renderpass->w;
+    beginInfo.renderArea.extent.height = renderpass->h;
 
     VkClearValue clear_values[2];
     TZeroMemory(clear_values, sizeof(VkClearValue) * 2);
@@ -131,10 +131,10 @@ void VulkanRenderpassBegin(
     clear_values[1].depthStencil.depth = renderpass->depth;
     clear_values[1].depthStencil.stencil = renderpass->stencil;
 
-    begin_info.clearValueCount = 2;
-    begin_info.pClearValues = clear_values;
+    beginInfo.clearValueCount = 2;
+    beginInfo.pClearValues = clear_values;
 
-    vkCmdBeginRenderPass(commandBuffer->handle, &begin_info, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(commandBuffer->handle, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
     commandBuffer->state = COMMAND_BUFFER_STATE_IN_RENDER_PASS;
 }
 
