@@ -43,6 +43,17 @@ b8 RendererEndFrame(f32 dt)
     return result;
 }
 
+void RendererOnResized(u16 width, u16 height) {
+    if (backend)
+    {
+        backend->resized(backend, width, height);
+    }
+    else
+    {
+        TWARN("renderer backend does not exist to accept resize: %i %i", width, height);
+    }
+}
+
 b8 RendererDrawFrame(render_packet* packet)
 {
     // If the begin frame returned successfully, mid-frame operations may continue.

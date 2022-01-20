@@ -22,7 +22,7 @@ void VulkanCommandBufferEnd(vulkan_command_buffer* commandBuffer);
 
 void VulkanCommandBufferUpdateSubmitted(vulkan_command_buffer* commandBuffer);
 
-void VulkanCommandBufferUpdateReset(vulkan_command_buffer* commandBuffer);
+void VulkanCommandBufferReset(vulkan_command_buffer* commandBuffer);
 
 /**
  * Allocates and begins recording to outCommandBuffer.

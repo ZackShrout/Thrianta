@@ -17,7 +17,7 @@ void VulkanSwapchainDestroy(
     vulkan_context* context,
     vulkan_swapchain* swapchain);
 
-b8 VulkanSwapchainAquireNextImageIndex(
+b8 VulkanSwapchainAcquireNextImageIndex(
     vulkan_context* context,
     vulkan_swapchain* swapchain,
     u64 timeoutNS,

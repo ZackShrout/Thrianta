@@ -32,10 +32,11 @@ void VulkanSwapchainDestroy(
     vulkan_context* context,
     vulkan_swapchain* swapchain)
 {
+    vkDeviceWaitIdle(context->device.logicalDevice);
     Destroy(context, swapchain);
 }
 
-b8 VulkanSwapchainAquireNextImageIndex(
+b8 VulkanSwapchainAcquireNextImageIndex(
     vulkan_context* context,
     vulkan_swapchain* swapchain,
     u64 timeoutNS,

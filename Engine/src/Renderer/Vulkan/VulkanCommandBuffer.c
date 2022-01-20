@@ -74,7 +74,7 @@ void VulkanCommandBufferUpdateSubmitted(vulkan_command_buffer* commandBuffer)
     commandBuffer->state = COMMAND_BUFFER_STATE_SUBMITTED;
 }
 
-void VulkanCommandBufferUpdateReset(vulkan_command_buffer* commandBuffer)
+void VulkanCommandBufferReset(vulkan_command_buffer* commandBuffer)
 {
     commandBuffer->state = COMMAND_BUFFER_STATE_READY;
 }

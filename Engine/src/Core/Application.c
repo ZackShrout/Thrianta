@@ -26,6 +26,7 @@ static application_state appState;
 // Event handlers
 b8 ApplicationOnEvent(u16 code, void* sender, void* listenerInst, event_context context);
 b8 ApplicationOnKey(u16 code, void* sender, void* listenerInst, event_context context);
+b8 ApplicationOnResized(u16 code, void* sender, void* listenerInst, event_context context);
 
 b8 ApplicationCreate(game* gameInst)
 {
@@ -61,6 +62,7 @@ b8 ApplicationCreate(game* gameInst)
     EventRegister(EVENT_CODE_APPLICATION_QUIT, 0, ApplicationOnEvent);
     EventRegister(EVENT_CODE_KEY_PRESSED, 0, ApplicationOnKey);
     EventRegister(EVENT_CODE_KEY_RELEASED, 0, ApplicationOnKey);
+    EventRegister(EVENT_CODE_RESIZED, 0, ApplicationOnResized);
 
     if (!PlatformStartup(
             &appState.platform,
@@ -174,6 +176,7 @@ b8 ApplicationRun()
     EventUnregister(EVENT_CODE_APPLICATION_QUIT, 0, ApplicationOnEvent);
     EventUnregister(EVENT_CODE_KEY_PRESSED, 0, ApplicationOnKey);
     EventUnregister(EVENT_CODE_KEY_RELEASED, 0, ApplicationOnKey);
+    EventUnregister(EVENT_CODE_RESIZED, 0, ApplicationOnResized);
     EventShutdown();
     InputShutdown();
     RendererShutdown();
@@ -237,5 +240,43 @@ b8 ApplicationOnKey(u16 code, void* sender, void* listenerInst, event_context co
             TDEBUG("'%c' key released in window.", keyCode);
         }
     }
+    return FALSE;
+}
+
+b8 ApplicationOnResized(u16 code, void* sender, void* listenerInst, event_context context) {
+    if (code == EVENT_CODE_RESIZED)
+    {
+        u16 width = context.data.u16[0];
+        u16 height = context.data.u16[1];
+
+        // Check if different. If so, trigger a resize event.
+        if (width != appState.width || height != appState.height)
+        {
+            appState.width = width;
+            appState.height = height;
+
+            TDEBUG("Window resize: %i, %i", width, height);
+
+            // Handle minimization
+            if (width == 0 || height == 0)
+            {
+                TINFO("Window minimized, suspending application.");
+                appState.isSuspended = TRUE;
+                return TRUE;
+            }
+            else
+            {
+                if (appState.isSuspended)
+                {
+                    TINFO("Window restored, resuming application.");
+                    appState.isSuspended = FALSE;
+                }
+                appState.gameInst->OnResize(appState.gameInst, width, height);
+                RendererOnResized(width, height);
+            }
+        }
+    }
+
+    // Event purposely not handled to allow other listeners to get this.
     return FALSE;
 }
