@@ -26,21 +26,21 @@ typedef struct event_system_state
 /**
  * Event system internal state.
  */
-static b8 isInitialized = FALSE;
+static b8 isInitialized = false;
 static event_system_state state;
 
 b8 EventInitialize()
 {
-    if (isInitialized == TRUE)
+    if (isInitialized == true)
     {
-        return FALSE;
+        return false;
     }
-    isInitialized = FALSE;
+    isInitialized = false;
     TZeroMemory(&state, sizeof(state));
 
-    isInitialized = TRUE;
+    isInitialized = true;
 
-    return TRUE;
+    return true;
 }
 
 void EventShutdown()
@@ -58,9 +58,9 @@ void EventShutdown()
 
 b8 EventRegister(u16 code, void* listener, PFN_on_event onEvent)
 {
-    if(isInitialized == FALSE)
+    if(isInitialized == false)
     {
-        return FALSE;
+        return false;
     }
 
     if(state.registered[code].events == 0)
@@ -74,7 +74,7 @@ b8 EventRegister(u16 code, void* listener, PFN_on_event onEvent)
         if(state.registered[code].events[i].listener == listener)
         {
             // TODO: warn
-            return FALSE;
+            return false;
         }
     }
 
@@ -84,21 +84,21 @@ b8 EventRegister(u16 code, void* listener, PFN_on_event onEvent)
     event.callback = onEvent;
     DArrayPush(state.registered[code].events, event);
 
-    return TRUE;
+    return true;
 }
 
 b8 EventUnregister(u16 code, void* listener, PFN_on_event onEvent)
 {
-    if(isInitialized == FALSE)
+    if(isInitialized == false)
     {
-        return FALSE;
+        return false;
     }
 
     // On nothing is registered for the code, boot out.
     if(state.registered[code].events == 0)
     {
         // TODO: warn
-        return FALSE;
+        return false;
     }
 
     u64 registeredCount = DArrayLength(state.registered[code].events);
@@ -110,25 +110,25 @@ b8 EventUnregister(u16 code, void* listener, PFN_on_event onEvent)
             // Found one, remove it
             registered_event poppedEvent;
             DArrayPopAt(state.registered[code].events, i, &poppedEvent);
-            return TRUE;
+            return true;
         }
     }
 
     // Not found.
-    return FALSE;
+    return false;
 }
 
 b8 EventFire(u16 code, void* sender, event_context context)
 {
-    if(isInitialized == FALSE)
+    if(isInitialized == false)
     {
-        return FALSE;
+        return false;
     }
 
     // If nothing is registered for the code, boot out.
     if(state.registered[code].events == 0)
     {
-        return FALSE;
+        return false;
     }
 
     u64 registeredCount = DArrayLength(state.registered[code].events);
@@ -138,10 +138,10 @@ b8 EventFire(u16 code, void* sender, event_context context)
         if(e.callback(code, sender, e.listener, context))
         {
             // Message has been handled, do not send to other listeners.
-            return TRUE;
+            return true;
         }
     }
 
     // Not found.
-    return FALSE;
+    return false;
 }

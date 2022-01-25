@@ -7,6 +7,7 @@ typedef enum memory_tag
     // For temporary use. Should be assigned one of the below or have a new tag created.
     MEMORY_TAG_UNKNOWN,
     MEMORY_TAG_ARRAY,
+    MEMORY_TAG_LINEAR_ALLOCATOR,
     MEMORY_TAG_DARRAY,
     MEMORY_TAG_DICT,
     MEMORY_TAG_RING_QUEUE,
@@ -28,15 +29,9 @@ typedef enum memory_tag
 
 TAPI void InitializeMemory();
 TAPI void ShutdownMemory();
-
 TAPI void* TAllocate(u64 size, memory_tag tag);
-
 TAPI void TFree(void* block, u64 size, memory_tag tag);
-
 TAPI void* TZeroMemory(void* block, u64 size);
-
 TAPI void* TCopyMemory(void* dest, const void* source, u64 size);
-
 TAPI void* TSetMemory(void* dest, s32 value, u64 size);
-
 TAPI char* GetMemoryUsageStr();

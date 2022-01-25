@@ -37,6 +37,26 @@
         },
         {
             "type": "shell",
+            "label": "Build Unit Tests",
+            "windows": {
+                "command": "${workspaceFolder}/Tests/build.bat"
+            },
+            "linux": {
+                "command": "${workspaceFolder}/Tests/build.sh"
+            },
+            "osx": {
+                "command": "${workspaceFolder}/Tests/build.sh"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/Tests"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build"
+        },
+        {
+            "type": "shell",
             "label": "Build Everything",
             "windows": {
                 "command": "${workspaceFolder}/build-all.bat",

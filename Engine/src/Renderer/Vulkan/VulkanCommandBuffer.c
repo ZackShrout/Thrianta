@@ -84,8 +84,8 @@ void VulkanCommandBufferAllocateAndBeginSingleUse(
     VkCommandPool pool,
     vulkan_command_buffer* outCommandBuffer)
 {
-    VulkanCommandBufferAllocate(context, pool, TRUE, outCommandBuffer);
-    VulkanCommandBufferBegin(outCommandBuffer, TRUE, FALSE, FALSE);
+    VulkanCommandBufferAllocate(context, pool, true, outCommandBuffer);
+    VulkanCommandBufferBegin(outCommandBuffer, true, false, false);
 }
 
 void VulkanCommandBufferEndSingleUse(

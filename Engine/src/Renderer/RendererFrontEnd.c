@@ -19,10 +19,10 @@ b8 RendererInitialize(const char* applicationName, struct platform_state* platSt
     if (!backend->initialize(backend, applicationName, platState))
     {
         TFATAL("Renderer backend failed to initialize. Shutting down.");
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 void RendererShutdown()
@@ -68,9 +68,9 @@ b8 RendererDrawFrame(render_packet* packet)
         if (!result)
         {
             TERROR("RendererEndFrame() failed. Application shutting down...");
-            return FALSE;
+            return false;
         }
     }
 
-    return TRUE;
+    return true;
 }

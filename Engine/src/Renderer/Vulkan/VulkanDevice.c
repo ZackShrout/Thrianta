@@ -38,7 +38,7 @@ b8 VulkanDeviceCreate(vulkan_context* context)
 {
     if (!SelectPhysicalDevice(context))
     {
-        return FALSE;
+        return false;
     }
 
     TINFO("Creating logical device...");
@@ -59,7 +59,7 @@ b8 VulkanDeviceCreate(vulkan_context* context)
     {
         indexCount--;
     }
-    u32 indices[indexCount];
+    u32 indices[32]; // indexCount
     u8 index = 0;
     indices[index++] = context->device.graphicsQueueIndex;
     if (!presentSharesGraphicsQueue)
@@ -71,7 +71,7 @@ b8 VulkanDeviceCreate(vulkan_context* context)
         indices[index++] = context->device.transferQueueIndex;
     }
 
-    VkDeviceQueueCreateInfo queueCreateInfos[indexCount];
+    VkDeviceQueueCreateInfo queueCreateInfos[32]; // indexCount
     for (u32 i = 0; i < indexCount; ++i)
     {
         queueCreateInfos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
@@ -145,7 +145,7 @@ b8 VulkanDeviceCreate(vulkan_context* context)
         &context->device.graphicsCommandPool));
     TINFO("Graphics command pool created.");
 
-    return TRUE;
+    return true;
 }
 
 void VulkanDeviceDestroy(vulkan_context* context)
@@ -268,16 +268,16 @@ b8 VulkanDeviceDetectDepthFormat(vulkan_device* device)
         if ((properties.linearTilingFeatures & flags) == flags)
         {
             device->depthFormat = candidates[i];
-            return TRUE;
+            return true;
         }
         else if ((properties.optimalTilingFeatures & flags) == flags)
         {
             device->depthFormat = candidates[i];
-            return TRUE;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 b8 SelectPhysicalDevice(vulkan_context* context)
@@ -287,10 +287,10 @@ b8 SelectPhysicalDevice(vulkan_context* context)
     if (physicalDeviceCount == 0)
     {
         TFATAL("No devices which support Vulkan were found.");
-        return FALSE;
+        return false;
     }
-
-    VkPhysicalDevice physicalDevices[physicalDeviceCount];
+    const u32 maxDeviceCount = 32;
+    VkPhysicalDevice physicalDevices[maxDeviceCount]; // physicalDeviceCount
     VK_CHECK(vkEnumeratePhysicalDevices(context->instance, &physicalDeviceCount, physicalDevices));
     for (u32 i = 0; i < physicalDeviceCount; i++)
     {
@@ -306,13 +306,13 @@ b8 SelectPhysicalDevice(vulkan_context* context)
         // TODO: These requirements should probably be driven by engine
         // configuration.
         vulkan_physical_device_requirements requirements = {};
-        requirements.graphics = TRUE;
-        requirements.present = TRUE;
-        requirements.transfer = TRUE;
+        requirements.graphics = true;
+        requirements.present = true;
+        requirements.transfer = true;
         // NOTE: Enable this if compute will be required.
-        // requirements.compute = TRUE;
-        requirements.samplerAnisotropy = TRUE;
-        requirements.discreteGPU = TRUE;
+        // requirements.compute = true;
+        requirements.samplerAnisotropy = true;
+        requirements.discreteGPU = true;
         requirements.deviceExtensionNames = DArrayCreate(const char*);
         DArrayPush(requirements.deviceExtensionNames, &VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
@@ -392,11 +392,11 @@ b8 SelectPhysicalDevice(vulkan_context* context)
     if (!context->device.physicalDevice)
     {
         TERROR("No physical devices were found which meet the requirements.");
-        return FALSE;
+        return false;
     }
 
     TINFO("Physical device selected.");
-    return TRUE;
+    return true;
 }
 
 b8 PhysicalDeviceMeetsRequirements(
@@ -420,13 +420,13 @@ b8 PhysicalDeviceMeetsRequirements(
         if (properties->deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
         {
             TINFO("Device is not a discrete GPU, and one is required. Skipping.");
-            return FALSE;
+            return false;
         }
     }
 
     u32 queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, 0);
-    VkQueueFamilyProperties queueFamilies[queueFamilyCount];
+    VkQueueFamilyProperties queueFamilies[32]; // queueFamilyCount
     vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies);
 
     // Look at each queue and see what queues it supports
@@ -507,7 +507,7 @@ b8 PhysicalDeviceMeetsRequirements(
                 TFree(outSwapChainSupport->presentModes, sizeof(VkPresentModeKHR) * outSwapChainSupport->presentModeCount, MEMORY_TAG_RENDERER);
             }
             TINFO("Required swapchain support not present, skipping device.");
-            return FALSE;
+            return false;
         }
 
         // Device extensions.
@@ -532,12 +532,12 @@ b8 PhysicalDeviceMeetsRequirements(
                 u32 requiredExtensionCount = DArrayLength(requirements->deviceExtensionNames);
                 for (u32 i = 0; i < requiredExtensionCount; i++)
                 {
-                    b8 found = FALSE;
+                    b8 found = false;
                     for (u32 j = 0; j < availableExtensionCount; j++)
                     {
                         if (StringsEqual(requirements->deviceExtensionNames[i], availableExtensions[j].extensionName))
                         {
-                            found = TRUE;
+                            found = true;
                             break;
                         }
                     }
@@ -546,7 +546,7 @@ b8 PhysicalDeviceMeetsRequirements(
                     {
                         TINFO("Required extension not found: '%s', skipping device.", requirements->deviceExtensionNames[i]);
                         TFree(availableExtensions, sizeof(VkExtensionProperties) * availableExtensionCount, MEMORY_TAG_RENDERER);
-                        return FALSE;
+                        return false;
                     }
                 }
             }
@@ -557,12 +557,12 @@ b8 PhysicalDeviceMeetsRequirements(
         if (requirements->samplerAnisotropy && !features->samplerAnisotropy)
         {
             TINFO("Device does not support samplerAnisotropy, skipping.");
-            return FALSE;
+            return false;
         }
 
         // Device meets all requirements.
-        return TRUE;
+        return true;
     }
 
-    return FALSE;
+    return false;
 }

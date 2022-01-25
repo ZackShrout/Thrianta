@@ -10,7 +10,7 @@
 b8 InitializeLogging()
 {
     // TODO: create log file.
-    return TRUE;
+    return true;
 }
 
 void ShutdownLogging()

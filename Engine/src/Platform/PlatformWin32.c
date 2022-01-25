@@ -60,7 +60,7 @@ b8 PlatformStartup(
     if (!RegisterClassA(&wc))
     {
         MessageBoxA(0, "Window registration failed", "Error", MB_ICONEXCLAMATION | MB_OK);
-        return FALSE;
+        return false;
     }
 
     // Create window
@@ -103,7 +103,7 @@ b8 PlatformStartup(
         MessageBoxA(NULL, "Window creation failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
 
         TFATAL("Window creation failed!");
-        return FALSE;
+        return false;
     }
     else
     {
@@ -123,7 +123,7 @@ b8 PlatformStartup(
     clockFrequency = 1.0 / (f64)frequency.QuadPart;
     QueryPerformanceCounter(&startTime);
 
-    return TRUE;
+    return true;
 }
 
 void PlatformShutdown(platform_state* platState)
@@ -147,7 +147,7 @@ b8 PlatformPumpMessages(platform_state* platState)
         DispatchMessageA(&message);
     }
 
-    return TRUE;
+    return true;
 }
 
 void* PlatformAllocate(u64 size, b8 aligned)
@@ -230,11 +230,11 @@ b8 PlatformCreateVulkanSurface(platform_state *platState, vulkan_context *contex
     if (result != VK_SUCCESS)
     {
         TFATAL("Vulkan surface creation failed.");
-        return FALSE;
+        return false;
     }
 
     context->surface = state->surface;
-    return TRUE;
+    return true;
 }
 
 LRESULT CALLBACK Win32ProcMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM lParam)
@@ -247,7 +247,7 @@ LRESULT CALLBACK Win32ProcMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM lPar
         case WM_CLOSE:
             event_context data = {};
             EventFire(EVENT_CODE_APPLICATION_QUIT, 0, data);
-            return TRUE;
+            return true;
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
@@ -274,6 +274,40 @@ LRESULT CALLBACK Win32ProcMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM lPar
             // Key pressed/released
             b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
             keys key = (u16)wParam;
+
+            if (wParam == VK_MENU) // Alt key
+            {
+                if (GetKeyState(VK_RMENU) & 0x8000)
+                {
+                    key = KEY_RALT;
+                }
+                else if (GetKeyState(VK_LMENU) & 0x8000)
+                {
+                    key = KEY_LALT;
+                }
+            }
+            else if (wParam == VK_SHIFT) // Shift key
+            {
+                if (GetKeyState(VK_RSHIFT) & 0x8000)
+                {
+                    key = KEY_RSHIFT;
+                }
+                else if (GetKeyState(VK_LSHIFT) & 0x8000)
+                {
+                    key = KEY_LSHIFT;
+                }
+            }
+            else if (wParam == VK_CONTROL) // Control key
+            {
+                if (GetKeyState(VK_RCONTROL) & 0x8000)
+                {
+                    key = KEY_RCONTROL;
+                }
+                else if (GetKeyState(VK_LCONTROL) & 0x8000)
+                {
+                    key = KEY_LCONTROL;
+                }
+            }
 
             // Pass to the input subsystem for processing
             InputProcessKey(key, pressed);

@@ -4,7 +4,7 @@
 #include <math.h>
 #include <stdlib.h>
 
-static b8 randSeeded = FALSE;
+static b8 randSeeded = false;
 
 /**
  * Note that these are here in order to prevent having to import the
@@ -45,7 +45,7 @@ s32 trandom()
     if (!randSeeded)
     {
         srand((u32)PlatformGetAbsoluteTime());
-        randSeeded = TRUE;
+        randSeeded = true;
     }
     return rand();
 }
@@ -55,7 +55,7 @@ s32 trandom_in_range(s32 min, s32 max)
     if (!randSeeded)
     {
         srand((u32)PlatformGetAbsoluteTime());
-        randSeeded = TRUE;
+        randSeeded = true;
     }
     return (rand() % (max - min + 1)) + min;
 }

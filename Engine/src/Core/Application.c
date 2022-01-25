@@ -20,7 +20,7 @@ typedef struct application_state
     f64 lastTime;
 } application_state;
 
-static b8 initialized = FALSE;
+static b8 initialized = false;
 static application_state appState;
 
 // Event handlers
@@ -33,7 +33,7 @@ b8 ApplicationCreate(game* gameInst)
     if (initialized)
     {
         TERROR("ApplicationCreate() called more than once.");
-        return FALSE;
+        return false;
     }
 
     appState.gameInst = gameInst;
@@ -50,13 +50,13 @@ b8 ApplicationCreate(game* gameInst)
     TDEBUG("A test message: %f", 3.14f);
     TTRACE("A test message: %f", 3.14f);
 
-    appState.isRunning = TRUE;
-    appState.isSuspended = FALSE;
+    appState.isRunning = true;
+    appState.isSuspended = false;
 
     if(!EventInitialize())
     {
         TERROR("Event system failed initialization. Application cannot continue.");
-        return FALSE;
+        return false;
     }
 
     EventRegister(EVENT_CODE_APPLICATION_QUIT, 0, ApplicationOnEvent);
@@ -72,26 +72,26 @@ b8 ApplicationCreate(game* gameInst)
             gameInst->appConfig.startWidth,
             gameInst->appConfig.startHeight))
     {
-        return FALSE;
+        return false;
     }
 
     // Renderer startup
     if (!RendererInitialize(gameInst->appConfig.name, &appState.platform)) {
         TFATAL("Failed to initialize renderer. Aborting application.");
-        return FALSE;
+        return false;
     }
 
     // Initialize the game.
     if (!appState.gameInst->Initialize(appState.gameInst)) {
         TFATAL("Game failed to initialize.");
-        return FALSE;
+        return false;
     }
 
     appState.gameInst->OnResize(appState.gameInst, appState.width, appState.height);
 
-    initialized = TRUE;
+    initialized = true;
 
-    return TRUE;
+    return true;
 }
 
 b8 ApplicationRun()
@@ -109,7 +109,7 @@ b8 ApplicationRun()
     {
         if(!PlatformPumpMessages(&appState.platform))
         {
-            appState.isRunning = FALSE;
+            appState.isRunning = false;
         }
 
         if(!appState.isSuspended)
@@ -122,7 +122,7 @@ b8 ApplicationRun()
             if (!appState.gameInst->Update(appState.gameInst, (f32)delta))
             {
                 TFATAL("Game update failed, shutting down.");
-                appState.isRunning = FALSE;
+                appState.isRunning = false;
                 break;
             }
 
@@ -130,7 +130,7 @@ b8 ApplicationRun()
             if (!appState.gameInst->Render(appState.gameInst, (f32)delta))
             {
                 TFATAL("Game render failed, shutting down.");
-                appState.isRunning = FALSE;
+                appState.isRunning = false;
                 break;
             }
 
@@ -150,7 +150,7 @@ b8 ApplicationRun()
                 u64 remainingMs = remainingSeconds * 1000;
 
                 // If there is time left, give it back to the OS
-                b8 limitFrames = FALSE;
+                b8 limitFrames = false;
                 if (remainingMs > 0 && limitFrames)
                 {
                     PlatformSleep(remainingMs - 1);
@@ -170,7 +170,7 @@ b8 ApplicationRun()
         }
     }
 
-    appState.isRunning = FALSE;
+    appState.isRunning = false;
 
     // Shutdown event system.
     EventUnregister(EVENT_CODE_APPLICATION_QUIT, 0, ApplicationOnEvent);
@@ -182,7 +182,7 @@ b8 ApplicationRun()
     RendererShutdown();
     PlatformShutdown(&appState.platform);
 
-    return TRUE;
+    return true;
 }
 
 void ApplicationGetFramebufferSize(u32* width, u32* height) {
@@ -196,12 +196,12 @@ b8 ApplicationOnEvent(u16 code, void* sender, void* listenerInst, event_context 
         case EVENT_CODE_APPLICATION_QUIT:
         {
             TINFO("EVENT_CODE_APPLICATION_QUIT recieved, shutting down.\n");
-            appState.isRunning = FALSE;
-            return TRUE;
+            appState.isRunning = false;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 b8 ApplicationOnKey(u16 code, void* sender, void* listenerInst, event_context context) {
@@ -215,7 +215,7 @@ b8 ApplicationOnKey(u16 code, void* sender, void* listenerInst, event_context co
             EventFire(EVENT_CODE_APPLICATION_QUIT, 0, data);
 
             // Block anything else from processing this.
-            return TRUE;
+            return true;
         }
         else if (keyCode == KEY_A)
         {
@@ -240,7 +240,7 @@ b8 ApplicationOnKey(u16 code, void* sender, void* listenerInst, event_context co
             TDEBUG("'%c' key released in window.", keyCode);
         }
     }
-    return FALSE;
+    return false;
 }
 
 b8 ApplicationOnResized(u16 code, void* sender, void* listenerInst, event_context context) {
@@ -261,15 +261,15 @@ b8 ApplicationOnResized(u16 code, void* sender, void* listenerInst, event_contex
             if (width == 0 || height == 0)
             {
                 TINFO("Window minimized, suspending application.");
-                appState.isSuspended = TRUE;
-                return TRUE;
+                appState.isSuspended = true;
+                return true;
             }
             else
             {
                 if (appState.isSuspended)
                 {
                     TINFO("Window restored, resuming application.");
-                    appState.isSuspended = FALSE;
+                    appState.isSuspended = false;
                 }
                 appState.gameInst->OnResize(appState.gameInst, width, height);
                 RendererOnResized(width, height);
@@ -278,5 +278,5 @@ b8 ApplicationOnResized(u16 code, void* sender, void* listenerInst, event_contex
     }
 
     // Event purposely not handled to allow other listeners to get this.
-    return FALSE;
+    return false;
 }

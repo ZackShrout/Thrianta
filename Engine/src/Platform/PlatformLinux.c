@@ -68,7 +68,7 @@ b8 PlatformStartup(
     if (xcb_connection_has_error(state->connection))
     {
         TFATAL("Failed to connect to X server via XCB.");
-        return FALSE;
+        return false;
     }
 
     // Get data from the X server
@@ -170,10 +170,10 @@ b8 PlatformStartup(
     if (stream_result <= 0)
     {
         TFATAL("An error occurred when flusing the stream: %d", stream_result);
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 void PlatformShutdown(platform_state* platState)
@@ -195,7 +195,7 @@ b8 PlatformPumpMessages(platform_state* platState)
     xcb_generic_event_t* event;
     xcb_client_message_event_t* cm;
 
-    b8 quitFlagged = FALSE;
+    b8 quitFlagged = false;
 
     // Poll for events until null is returned.
     while (event != 0)
@@ -281,7 +281,7 @@ b8 PlatformPumpMessages(platform_state* platState)
 
                 // Window close
                 if (cm->data.data32[0] == state->wm_delete_win) {
-                    quitFlagged = TRUE;
+                    quitFlagged = true;
                 }
             } break;
             default:
@@ -379,11 +379,11 @@ b8 PlatformCreateVulkanSurface(platform_state *platState, vulkan_context *contex
     if (result != VK_SUCCESS)
     {
         TFATAL("Vulkan surface creation failed.");
-        return FALSE;
+        return false;
     }
 
     context->surface = state->surface;
-    return TRUE;
+    return true;
 }
 
 // Key translation
@@ -554,8 +554,10 @@ keys TranslateKeycode(u32 xKeycode)
         case XK_Control_R:
             return KEY_RCONTROL;
         // case XK_Menu: return KEY_LMENU;
-        case XK_Menu:
-            return KEY_RMENU;
+        case XK_Alt_L:
+            return KEY_LALT;
+        case XK_Alt_R:
+            return KEY_RALT;
 
         case XK_semicolon:
             return KEY_SEMICOLON;

@@ -96,12 +96,12 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     for (u32 i = 0; i < requiredValidationLayerCount; i++)
     {
         TINFO("Searching for layer: %s...", requiredValidationLayerNames[i]);
-        b8 found = FALSE;
+        b8 found = false;
         for (u32 j = 0; j < availableLayerCount; j++)
         {
             if (StringsEqual(requiredValidationLayerNames[i], availableLayers[j].layerName))
             {
-                found = TRUE;
+                found = true;
                 TINFO("Found.");
                 break;
             }
@@ -110,7 +110,7 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
         if (!found)
         {
             TFATAL("Required validation layer is missing: %s", requiredValidationLayerNames[i]);
-            return FALSE;
+            return false;
         }
     }
     TINFO("All required validation layers are present.");
@@ -147,7 +147,7 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     if (!PlatformCreateVulkanSurface(platState, &context))
     {
         TERROR("Failed to create platform surface!");
-        return FALSE;
+        return false;
     }
     TDEBUG("Vulkan surface created.");
 
@@ -155,7 +155,7 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     if (!VulkanDeviceCreate(&context))
     {
         TERROR("Failed to create device!");
-        return FALSE;
+        return false;
     }
 
     // Swapchain
@@ -195,7 +195,7 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
         // Create the fence in a signaled state, indicating that the first frame has already been "rendered".
         // This will prevent the application from waiting indefinitely for the first frame to render since it
         // cannot be rendered until a frame is "rendered" before it.
-        VulkanFenceCreate(&context, TRUE, &context.inFlightFences[i]);
+        VulkanFenceCreate(&context, true, &context.inFlightFences[i]);
     }
 
     // In flight fences should not yet exist at this point, so clear the list. These are stored in pointers
@@ -208,7 +208,7 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     }
     
     TINFO("Vulkan renderer initialized successfully.");
-    return TRUE;
+    return true;
 }
 
 void VulkanRendererBackendShutdown(renderer_backend* backend)
@@ -319,11 +319,11 @@ b8 VulkanRendererBackendBeginFrame(renderer_backend* backend, f32 dt)
         VkResult result = vkDeviceWaitIdle(device->logicalDevice);
         if (!VulkanResultIsSuccess(result))
         {
-            TERROR("vulkanRendererBackendBeginFrame vkDeviceWaitIdle (1) failed: '%s'", VulkanResultString(result, TRUE));
-            return FALSE;
+            TERROR("vulkanRendererBackendBeginFrame vkDeviceWaitIdle (1) failed: '%s'", VulkanResultString(result, true));
+            return false;
         }
         TINFO("Recreating swapchain, booting.");
-        return FALSE;
+        return false;
     }
 
     // Check if the framebuffer has been resized. If so, a new swapchain must be created.
@@ -332,19 +332,19 @@ b8 VulkanRendererBackendBeginFrame(renderer_backend* backend, f32 dt)
         VkResult result = vkDeviceWaitIdle(device->logicalDevice);
         if (!VulkanResultIsSuccess(result))
         {
-            TERROR("VulkanRendererBackendBeginFrame vkDeviceWaitIdle (2) failed: '%s'", VulkanResultString(result, TRUE));
-            return FALSE;
+            TERROR("VulkanRendererBackendBeginFrame vkDeviceWaitIdle (2) failed: '%s'", VulkanResultString(result, true));
+            return false;
         }
 
         // If the swapchain recreation failed (because, for example, the window was minimized),
         // boot out before unsetting the flag.
         if (!RecreateSwapchain(backend))
         {
-            return FALSE;
+            return false;
         }
 
         TINFO("Resized, booting.");
-        return FALSE;
+        return false;
     }
 
     // Wait for the execution of the current frame to complete. The fence being free will allow this one to move on.
@@ -354,7 +354,7 @@ b8 VulkanRendererBackendBeginFrame(renderer_backend* backend, f32 dt)
             UINT64_MAX))
     {
         TWARN("In-flight fence wait failure!");
-        return FALSE;
+        return false;
     }
 
     // Acquire the next image from the swap chain. Pass along the semaphore that should signaled when this completes.
@@ -367,13 +367,13 @@ b8 VulkanRendererBackendBeginFrame(renderer_backend* backend, f32 dt)
             0,
             &context.imageIndex))
     {
-        return FALSE;
+        return false;
     }
 
     // Begin recording commands.
     vulkan_command_buffer* commandBuffer = &context.graphicsCommandBuffers[context.imageIndex];
     VulkanCommandBufferReset(commandBuffer);
-    VulkanCommandBufferBegin(commandBuffer, FALSE, FALSE, FALSE);
+    VulkanCommandBufferBegin(commandBuffer, false, false, false);
 
     // Dynamic state
     VkViewport viewport;
@@ -401,7 +401,7 @@ b8 VulkanRendererBackendBeginFrame(renderer_backend* backend, f32 dt)
         commandBuffer,
         &context.mainRenderpass,
         context.swapchain.framebuffers[context.imageIndex].handle);
-    return TRUE;
+    return true;
 }
 
 b8 VulkanRendererBackendEndFrame(renderer_backend* backend, f32 dt)
@@ -457,8 +457,8 @@ b8 VulkanRendererBackendEndFrame(renderer_backend* backend, f32 dt)
         context.inFlightFences[context.currentFrame].handle);
     if (result != VK_SUCCESS)
     {
-        TERROR("vkQueueSubmit failed with result: %s", VulkanResultString(result, TRUE));
-        return FALSE;
+        TERROR("vkQueueSubmit failed with result: %s", VulkanResultString(result, true));
+        return false;
     }
 
     VulkanCommandBufferUpdateSubmitted(commandBuffer);
@@ -473,7 +473,7 @@ b8 VulkanRendererBackendEndFrame(renderer_backend* backend, f32 dt)
         context.queueCompleteSemaphores[context.currentFrame],
         context.imageIndex);
     
-    return TRUE;
+    return true;
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
@@ -541,7 +541,7 @@ void CreateCommandBuffers(renderer_backend* backend)
         VulkanCommandBufferAllocate(
             &context,
             context.device.graphicsCommandPool,
-            TRUE,
+            true,
             &context.graphicsCommandBuffers[i]);
     }
 
@@ -573,18 +573,18 @@ b8 RecreateSwapchain(renderer_backend* backend) {
     if (context.recreatingSwapchain)
     {
         TDEBUG("RecreateSwapchain called when already recreating. Booting.");
-        return FALSE;
+        return false;
     }
 
     // Detect if the window is too small to be drawn to
     if (context.framebufferWidth == 0 || context.framebufferHeight == 0)
     {
         TDEBUG("RecreateSwapchain called when window is < 1 in a dimension. Booting.");
-        return FALSE;
+        return false;
     }
 
     // Mark as recreating if the dimensions are valid.
-    context.recreatingSwapchain = TRUE;
+    context.recreatingSwapchain = true;
 
     // Wait for any operations to complete.
     vkDeviceWaitIdle(context.device.logicalDevice);
@@ -641,7 +641,7 @@ b8 RecreateSwapchain(renderer_backend* backend) {
     CreateCommandBuffers(backend);
 
     // Clear the recreating flag.
-    context.recreatingSwapchain = FALSE;
+    context.recreatingSwapchain = false;
 
-    return TRUE;
+    return true;
 }

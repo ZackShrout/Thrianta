@@ -17,6 +17,7 @@ static const char* memoryTagStrings[MEMORY_TAG_MAX_TAGS] =
 {
     "UNKNOWN    ",
     "ARRAY      ",
+    "LINEAR_ALLC",
     "DARRAY     ",
     "DICT       ",
     "RING_QUEUE ",
@@ -54,7 +55,7 @@ void* TAllocate(u64 size, memory_tag tag)
     stats.taggedAllocations[tag] += size;
 
     // TODO: Memory alignment
-    void* block = PlatformAllocate(size, FALSE);
+    void* block = PlatformAllocate(size, false);
     PlatformZeroMemory(block, size);
     return block;
 }
@@ -70,7 +71,7 @@ void TFree(void* block, u64 size, memory_tag tag)
     stats.taggedAllocations[tag] -= size;
 
     // TODO: Memory alignment
-    PlatformFree(block, FALSE);
+    PlatformFree(block, false);
 }
 
 void* TZeroMemory(void* block, u64 size)
