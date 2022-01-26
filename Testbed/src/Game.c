@@ -1,6 +1,8 @@
 #include "Game.h"
 
 #include <Core/Logger.h>
+#include <Core/TMemory.h>
+#include <Core/Input.h>
 
 b8 GameInitialize(game* gameInst)
 {
@@ -10,6 +12,14 @@ b8 GameInitialize(game* gameInst)
 
 b8 GameUpdate(game* gameInst, f32 dt)
 {
+    static u64 allocCount = 0;
+    u64 previousAllocCount = allocCount;
+    allocCount = GetMemoryAllocCount();
+    if (InputIsKeyUp('M') && InputWasKeyDown('M'))
+    {
+        TDEBUG("Allocations: %llu (%llu this frame).", allocCount, allocCount - previousAllocCount);
+    }
+    
     return true;
 }
 

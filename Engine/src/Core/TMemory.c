@@ -35,14 +35,28 @@ static const char* memoryTagStrings[MEMORY_TAG_MAX_TAGS] =
     "SCENE      "
 };
 
-static struct memory_stats stats;
-
-void InitializeMemory()
+typedef struct memory_system_state
 {
-    PlatformZeroMemory(&stats, sizeof(stats));
+    struct memory_stats stats;
+    u64 allocCount;
+} memory_system_state;
+
+static memory_system_state* statePtr;
+
+void InitializeMemory(u64* memoryRequirements, void* state)
+{
+    *memoryRequirements = sizeof(memory_system_state);
+    if (state == 0) return;
+
+    statePtr = state;
+    statePtr->allocCount = 0;
+    PlatformZeroMemory(&statePtr->stats, sizeof(statePtr->stats));
 }
 
-void ShutdownMemory() {}
+void ShutdownMemory(void* state)
+{
+    statePtr = 0;
+}
 
 void* TAllocate(u64 size, memory_tag tag)
 {
@@ -51,8 +65,12 @@ void* TAllocate(u64 size, memory_tag tag)
         TWARN("TAllocate called using MEMORY_TAG_UNKNOWN. Re-class this allocation.");
     }
 
-    stats.totalAllocated += size;
-    stats.taggedAllocations[tag] += size;
+    if (statePtr)
+    {
+        statePtr->stats.totalAllocated += size;
+        statePtr->stats.taggedAllocations[tag] += size;
+        statePtr->allocCount++;
+    }
 
     // TODO: Memory alignment
     void* block = PlatformAllocate(size, false);
@@ -67,8 +85,8 @@ void TFree(void* block, u64 size, memory_tag tag)
         TWARN("TFree called using MEMORY_TAG_UNKNOWN. Re-class this allocation.");
     }
 
-    stats.totalAllocated -= size;
-    stats.taggedAllocations[tag] -= size;
+    statePtr->stats.totalAllocated -= size;
+    statePtr->stats.taggedAllocations[tag] -= size;
 
     // TODO: Memory alignment
     PlatformFree(block, false);
@@ -101,26 +119,26 @@ char* GetMemoryUsageStr()
     {
         char unit[4] = "XiB";
         float amount = 1.0f;
-        if (stats.taggedAllocations[i] >= gib)
+        if (statePtr->stats.taggedAllocations[i] >= gib)
         {
             unit[0] = 'G';
-            amount = stats.taggedAllocations[i] / (float)gib;
+            amount = statePtr->stats.taggedAllocations[i] / (float)gib;
         }
-        else if (stats.taggedAllocations[i] >= mib)
+        else if (statePtr->stats.taggedAllocations[i] >= mib)
         {
             unit[0] = 'M';
-            amount = stats.taggedAllocations[i] / (float)mib;
+            amount = statePtr->stats.taggedAllocations[i] / (float)mib;
         }
-        else if (stats.taggedAllocations[i] >= kib)
+        else if (statePtr->stats.taggedAllocations[i] >= kib)
         {
             unit[0] = 'K';
-            amount = stats.taggedAllocations[i] / (float)kib;
+            amount = statePtr->stats.taggedAllocations[i] / (float)kib;
         }
         else
         {
             unit[0] = 'B';
             unit[1] = 0;
-            amount = (float)stats.taggedAllocations[i];
+            amount = (float)statePtr->stats.taggedAllocations[i];
         }
 
         s32 length = snprintf(buffer + offset, 8000, "  %s: %.2f%s\n", memoryTagStrings[i], amount, unit);
@@ -129,4 +147,14 @@ char* GetMemoryUsageStr()
     // TODO: This is a memory leak danger
     char* outString = StringDuplicate(buffer);
     return outString;
+}
+
+u64 GetMemoryAllocCount()
+{
+    if (statePtr)
+    {
+        return statePtr->allocCount;
+    }
+
+    return 0;
 }

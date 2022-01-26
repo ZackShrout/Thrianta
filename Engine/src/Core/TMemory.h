@@ -27,11 +27,12 @@ typedef enum memory_tag
     MEMORY_TAG_MAX_TAGS
 } memory_tag;
 
-TAPI void InitializeMemory();
-TAPI void ShutdownMemory();
+TAPI void InitializeMemory(u64* memoryRequirements, void* state);
+TAPI void ShutdownMemory(void* state);
 TAPI void* TAllocate(u64 size, memory_tag tag);
 TAPI void TFree(void* block, u64 size, memory_tag tag);
 TAPI void* TZeroMemory(void* block, u64 size);
 TAPI void* TCopyMemory(void* dest, const void* source, u64 size);
 TAPI void* TSetMemory(void* dest, s32 value, u64 size);
 TAPI char* GetMemoryUsageStr();
+TAPI u64 GetMemoryAllocCount();

@@ -18,6 +18,7 @@ b8 CreateGame(game* outGame)
 
     // Create the game state.
     outGame->state = TAllocate(sizeof(game_state), MEMORY_TAG_GAME);
+    outGame->applicationState = 0;
 
     return true;
 }
