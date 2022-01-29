@@ -22,14 +22,23 @@ typedef struct platform_state
     HINSTANCE hInstance;
     HWND hwnd;
     VkSurfaceKHR surface;
-    // Clock
-    f64 clockFrequency;
-    LARGE_INTEGER startTime;
 } platform_state;
 
 static platform_state* statePtr;
 
+// Clock
+static f64 clockFrequency;
+static LARGE_INTEGER startTime;
+
 LRESULT CALLBACK Win32ProcMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM lParam);
+
+void ClockSetup()
+{
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
+    clockFrequency = 1.0 / (f64)frequency.QuadPart;
+    QueryPerformanceCounter(&startTime);
+}
 
 b8 PlatformSystemStartup(
     u64* memoryRequirements,
@@ -121,10 +130,7 @@ b8 PlatformSystemStartup(
     ShowWindow(statePtr->hwnd, showWindowCommandFlags);
 
     // Clock setup
-    LARGE_INTEGER frequency;
-    QueryPerformanceFrequency(&frequency);
-    statePtr->clockFrequency = 1.0 / (f64)frequency.QuadPart;
-    QueryPerformanceCounter(&statePtr->startTime);
+    ClockSetup();
 
     return true;
 }
@@ -204,14 +210,12 @@ void PlatformConsoleWriteError(const char* message, u8 colour)
 
 f64 PlatformGetAbsoluteTime()
 {
-    if (statePtr)
-    {
-        LARGE_INTEGER nowTime;
-        QueryPerformanceCounter(&nowTime);
-        return (f64)nowTime.QuadPart * statePtr->clockFrequency;
-    }
+    if (!clockFrequency)
+        ClockSetup();
 
-    return 0;
+    LARGE_INTEGER nowTime;
+    QueryPerformanceCounter(&nowTime);
+    return (f64)nowTime.QuadPart * clockFrequency;
 }
 
 void PlatformSleep(u64 ms)
@@ -282,43 +286,31 @@ LRESULT CALLBACK Win32ProcMessage(HWND hwnd, u32 msg, WPARAM wParam, LPARAM lPar
             b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
             keys key = (u16)wParam;
 
+            // Check for extended scan code
+            b8 isExtended = (HIWORD(lParam) & KF_EXTENDED) == KF_EXTENDED;
+
             if (wParam == VK_MENU) // Alt key
             {
-                if (GetKeyState(VK_RMENU) & 0x8000)
-                {
-                    key = KEY_RALT;
-                }
-                else if (GetKeyState(VK_LMENU) & 0x8000)
-                {
-                    key = KEY_LALT;
-                }
+               key = isExtended ? KEY_RALT : KEY_LALT;
             }
             else if (wParam == VK_SHIFT) // Shift key
             {
-                if (GetKeyState(VK_RSHIFT) & 0x8000)
-                {
-                    key = KEY_RSHIFT;
-                }
-                else if (GetKeyState(VK_LSHIFT) & 0x8000)
-                {
-                    key = KEY_LSHIFT;
-                }
+                // KF_EXTENDED is not set for shift key
+                u32 leftShift = MapVirtualKey(VK_LSHIFT, MAPVK_VK_TO_VSC);
+                u32 scancode = ((lParam & (0xFF << 16)) >> 16);
+                key = scancode == leftShift ? KEY_LSHIFT : KEY_RSHIFT;
             }
             else if (wParam == VK_CONTROL) // Control key
             {
-                if (GetKeyState(VK_RCONTROL) & 0x8000)
-                {
-                    key = KEY_RCONTROL;
-                }
-                else if (GetKeyState(VK_LCONTROL) & 0x8000)
-                {
-                    key = KEY_LCONTROL;
-                }
+                key = isExtended ? KEY_RCONTROL : KEY_LCONTROL;
             }
 
             // Pass to the input subsystem for processing
             InputProcessKey(key, pressed);
-        } break;
+
+            // Return 0 to prevent default window behaviour for some keypresses, such as alt.
+            return 0;
+        }
         case WM_MOUSEMOVE:
         {
             // Mouse move

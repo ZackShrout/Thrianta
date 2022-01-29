@@ -102,10 +102,32 @@ typedef struct vulkan_command_buffer
     vulkan_command_buffer_state state; // Command buffer state.
 } vulkan_command_buffer;
 
-typedef struct vulkan_fence {
+typedef struct vulkan_fence
+{
     VkFence handle;
     b8 isSignaled;
 } vulkan_fence;
+
+typedef struct vulkan_shader_stage
+{
+    VkShaderModuleCreateInfo create_info;
+    VkShaderModule handle;
+    VkPipelineShaderStageCreateInfo shader_stage_create_info;
+} vulkan_shader_stage;
+
+typedef struct vulkan_pipeline
+{
+    VkPipeline handle;
+    VkPipelineLayout pipeline_layout;
+} vulkan_pipeline;
+
+#define OBJECT_SHADER_STAGE_COUNT 2
+typedef struct vulkan_object_shader
+{
+    // vertex, fragment
+    vulkan_shader_stage stages[OBJECT_SHADER_STAGE_COUNT];
+    vulkan_pipeline pipeline;
+} vulkan_object_shader;
 
 typedef struct vulkan_context
 {
@@ -132,6 +154,7 @@ typedef struct vulkan_context
     u32 imageIndex;
     u32 currentFrame;
     b8 recreatingSwapchain;
+    vulkan_object_shader objectShader;
     s32 (*FindMemoryIndex)(u32 typeFilter, u32 propertyFlags);
 
 #if defined(_DEBUG)

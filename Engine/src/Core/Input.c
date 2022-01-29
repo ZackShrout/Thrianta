@@ -50,40 +50,38 @@ void InputUpdate(f64 dt)
 
 void InputProcessKey(keys key, b8 pressed)
 {
-    if (key == KEY_LALT)
-        {
-            TINFO("Left alt pressed.");
-        }
-        else if (key == KEY_RALT)
-        {
-            TINFO("Right alt pressed.");
-        }
-        
-        if (key == KEY_LSHIFT)
-        {
-            TINFO("Left shift pressed.");
-        }
-        else if (key == KEY_RSHIFT)
-        {
-            TINFO("Right shift pressed.");
-        }
-
-        if (key == KEY_LCONTROL)
-        {
-            TINFO("Left control pressed.");
-        }
-        else if (key == KEY_RCONTROL)
-        {
-            TINFO("Right control pressed.");
-        }
-    
     // Only handle this if the state actually changed.
-    if (statePtr->keyboardCurrent.keys[key] != pressed)
+    if (statePtr && statePtr->keyboardCurrent.keys[key] != pressed)
     {
         // Update internal state.
         statePtr->keyboardCurrent.keys[key] = pressed;
 
+        if (key == KEY_LALT)
+        {
+            TINFO("Left alt %s.", pressed ? "pressed" : "released");
+        }
+        else if (key == KEY_RALT)
+        {
+            TINFO("Right alt %s.", pressed ? "pressed" : "released");
+        }
         
+        if (key == KEY_LSHIFT)
+        {
+            TINFO("Left shift %s.", pressed ? "pressed" : "released");
+        }
+        else if (key == KEY_RSHIFT)
+        {
+            TINFO("Right shift %s.", pressed ? "pressed" : "released");
+        }
+
+        if (key == KEY_LCONTROL)
+        {
+            TINFO("Left control %s.", pressed ? "pressed" : "released");
+        }
+        else if (key == KEY_RCONTROL)
+        {
+            TINFO("Right control %s.", pressed ? "pressed" : "released");
+        }
 
         // Fire off an event for immediate processing.
         event_context context;

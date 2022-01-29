@@ -8,6 +8,7 @@
 #include "VulkanFramebuffer.h"
 #include "VulkanUtils.h"
 #include "VulkanFence.h"
+#include "Shaders/VulkanObjectShader.h"
 #include "Core/Logger.h"
 #include "Core/TMemory.h"
 #include "Core/TString.h"
@@ -205,6 +206,12 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     for (u32 i = 0; i < context.swapchain.imageCount; i++)
     {
         context.imagesInFlight[i] = 0;
+    }
+
+    // Create builtin shaders
+    if (!vulkan_object_shader_create(&context, &context.objectShader)) {
+        TERROR("Error loading built-in basic_lighting shader.");
+        return false;
     }
     
     TINFO("Vulkan renderer initialized successfully.");
