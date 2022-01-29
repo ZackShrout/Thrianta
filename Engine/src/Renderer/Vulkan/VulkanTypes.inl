@@ -110,15 +110,15 @@ typedef struct vulkan_fence
 
 typedef struct vulkan_shader_stage
 {
-    VkShaderModuleCreateInfo create_info;
+    VkShaderModuleCreateInfo createInfo;
     VkShaderModule handle;
-    VkPipelineShaderStageCreateInfo shader_stage_create_info;
+    VkPipelineShaderStageCreateInfo shaderStageCreateInfo;
 } vulkan_shader_stage;
 
 typedef struct vulkan_pipeline
 {
     VkPipeline handle;
-    VkPipelineLayout pipeline_layout;
+    VkPipelineLayout pipelineLayout;
 } vulkan_pipeline;
 
 #define OBJECT_SHADER_STAGE_COUNT 2

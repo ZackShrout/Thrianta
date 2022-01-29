@@ -16,8 +16,8 @@ b8 CreateShaderModule(
     char fileName[512];
     StringFormat(fileName, "assets/shaders/%s.%s.spv", name, typeStr);
 
-    TZeroMemory(&shaderStages[stageIndex].create_info, sizeof(VkShaderModuleCreateInfo));
-    shaderStages[stageIndex].create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+    TZeroMemory(&shaderStages[stageIndex].createInfo, sizeof(VkShaderModuleCreateInfo));
+    shaderStages[stageIndex].createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 
     // Obtain file handle.
     file_handle handle;
@@ -35,24 +35,24 @@ b8 CreateShaderModule(
         TERROR("Unable to binary read shader module: %s.", fileName);
         return false;
     }
-    shaderStages[stageIndex].create_info.codeSize = size;
-    shaderStages[stageIndex].create_info.pCode = (u32*)fileBuffer;
+    shaderStages[stageIndex].createInfo.codeSize = size;
+    shaderStages[stageIndex].createInfo.pCode = (u32*)fileBuffer;
 
     // Close the file.
     FilesystemClose(&handle);
 
     VK_CHECK(vkCreateShaderModule(
         context->device.logicalDevice,
-        &shaderStages[stageIndex].create_info,
+        &shaderStages[stageIndex].createInfo,
         context->allocator,
         &shaderStages[stageIndex].handle));
 
     // Shader stage info
-    TZeroMemory(&shaderStages[stageIndex].shader_stage_create_info, sizeof(VkPipelineShaderStageCreateInfo));
-    shaderStages[stageIndex].shader_stage_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-    shaderStages[stageIndex].shader_stage_create_info.stage = shaderStageFlag;
-    shaderStages[stageIndex].shader_stage_create_info.module = shaderStages[stageIndex].handle;
-    shaderStages[stageIndex].shader_stage_create_info.pName = "main";
+    TZeroMemory(&shaderStages[stageIndex].shaderStageCreateInfo, sizeof(VkPipelineShaderStageCreateInfo));
+    shaderStages[stageIndex].shaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    shaderStages[stageIndex].shaderStageCreateInfo.stage = shaderStageFlag;
+    shaderStages[stageIndex].shaderStageCreateInfo.module = shaderStages[stageIndex].handle;
+    shaderStages[stageIndex].shaderStageCreateInfo.pName = "main";
 
     if (fileBuffer)
     {

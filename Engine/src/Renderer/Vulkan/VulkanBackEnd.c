@@ -209,7 +209,7 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     }
 
     // Create builtin shaders
-    if (!vulkan_object_shader_create(&context, &context.objectShader)) {
+    if (!VulkanObjectShaderCreate(&context, &context.objectShader)) {
         TERROR("Error loading built-in basic_lighting shader.");
         return false;
     }
