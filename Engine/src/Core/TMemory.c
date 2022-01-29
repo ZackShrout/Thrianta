@@ -43,7 +43,7 @@ typedef struct memory_system_state
 
 static memory_system_state* statePtr;
 
-void InitializeMemory(u64* memoryRequirements, void* state)
+void MemorySystemInitialize(u64* memoryRequirements, void* state)
 {
     *memoryRequirements = sizeof(memory_system_state);
     if (state == 0) return;
@@ -53,7 +53,7 @@ void InitializeMemory(u64* memoryRequirements, void* state)
     PlatformZeroMemory(&statePtr->stats, sizeof(statePtr->stats));
 }
 
-void ShutdownMemory(void* state)
+void MemorySystemShutdown(void* state)
 {
     statePtr = 0;
 }
@@ -85,8 +85,11 @@ void TFree(void* block, u64 size, memory_tag tag)
         TWARN("TFree called using MEMORY_TAG_UNKNOWN. Re-class this allocation.");
     }
 
-    statePtr->stats.totalAllocated -= size;
-    statePtr->stats.taggedAllocations[tag] -= size;
+    if (statePtr)
+    {
+        statePtr->stats.totalAllocated -= size;
+        statePtr->stats.taggedAllocations[tag] -= size;
+    }
 
     // TODO: Memory alignment
     PlatformFree(block, false);

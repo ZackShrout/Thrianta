@@ -14,7 +14,7 @@ typedef struct logger_system_state
 
 static logger_system_state* statePtr;
 
-b8 InitializeLogging(u64* memoryRequirement, void* state)
+b8 LoggingSystemInitialize(u64* memoryRequirement, void* state)
 {
     *memoryRequirement = sizeof(logger_system_state);
     if (state == 0) return true;

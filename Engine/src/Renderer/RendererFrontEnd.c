@@ -3,20 +3,24 @@
 #include "Core/Logger.h"
 #include "Core/TMemory.h"
 
-struct platform_state;
+typedef struct renderer_system_state {
+    renderer_backend backend;
+} renderer_system_state;
 
-// Backend render context.
-static renderer_backend* backend = 0;
+static renderer_system_state* statePtr;
 
-b8 RendererInitialize(const char* applicationName, struct platform_state* platState)
+b8 RendererSystemInitialize(u64* memoryRequirement, void* state, const char* applicationName)
 {
-    backend = TAllocate(sizeof(renderer_backend), MEMORY_TAG_RENDERER);
+    *memoryRequirement = sizeof(renderer_system_state);
+    if (state == 0) return true;
+
+    statePtr = state;
 
     // TODO: make this configurable.
-    RendererBackendCreate(RENDERER_BACKEND_TYPE_VULKAN, platState, backend);
-    backend->frameNumber = 0;
+    RendererBackendCreate(RENDERER_BACKEND_TYPE_VULKAN, &statePtr->backend);
+    statePtr->backend.frameNumber = 0;
 
-    if (!backend->initialize(backend, applicationName, platState))
+    if (!statePtr->backend.initialize(&statePtr->backend, applicationName))
     {
         TFATAL("Renderer backend failed to initialize. Shutting down.");
         return false;
@@ -25,28 +29,36 @@ b8 RendererInitialize(const char* applicationName, struct platform_state* platSt
     return true;
 }
 
-void RendererShutdown()
+void RendererSystemShutdown(void* state)
 {
-    backend->shutdown(backend);
-    TFree(backend, sizeof(renderer_backend), MEMORY_TAG_RENDERER);
+    if (statePtr)
+    {
+        statePtr->backend.shutdown(&statePtr->backend);
+    }
+
+    statePtr = 0;
 }
 
 b8 RendererBeginFrame(f32 dt)
 {
-    return backend->begin_frame(backend, dt);
+    if (!statePtr) return false;
+    
+    return statePtr->backend.begin_frame(&statePtr->backend, dt);
 }
 
 b8 RendererEndFrame(f32 dt)
 {
-    b8 result = backend->end_frame(backend, dt);
-    backend->frameNumber++;
+    if (!statePtr) return false;
+    
+    b8 result = statePtr->backend.end_frame(&statePtr->backend, dt);
+    statePtr->backend.frameNumber++;
     return result;
 }
 
 void RendererOnResized(u16 width, u16 height) {
-    if (backend)
+    if (statePtr)
     {
-        backend->resized(backend, width, height);
+        statePtr->backend.resized(&statePtr->backend, width, height);
     }
     else
     {

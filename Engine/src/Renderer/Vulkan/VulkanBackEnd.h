@@ -1,7 +1,7 @@
 #pragma once
 #include "Renderer/RendererBackEnd.h"
 
-b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applicationName, struct platform_state* platState);
+b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applicationName);
 void VulkanRendererBackendShutdown(renderer_backend* backend);
 
 void VulkanRendererBackendOnResize(renderer_backend* backend, u16 width, u16 height);

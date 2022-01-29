@@ -1,10 +1,8 @@
 #include "RendererBackEnd.h"
 #include "Vulkan/VulkanBackEnd.h"
 
-b8 RendererBackendCreate(renderer_backend_type type, struct platform_state* platState, renderer_backend* outRendererBackend)
+b8 RendererBackendCreate(renderer_backend_type type, renderer_backend* outRendererBackend)
 {
-    outRendererBackend->platState = platState;
-
     if (type == RENDERER_BACKEND_TYPE_VULKAN)
     {
         outRendererBackend->initialize = VulkanRendererBackendInitialize;

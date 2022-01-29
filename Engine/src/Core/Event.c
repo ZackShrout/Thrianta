@@ -24,54 +24,50 @@ typedef struct event_system_state
 } event_system_state;
 
 /**
- * Event system internal state.
+ * Event system internal statePtr->
  */
-static b8 isInitialized = false;
-static event_system_state state;
+static event_system_state* statePtr;
 
-b8 EventInitialize()
+void EventSystemInitialize(u64* memoryRequirements, void* state)
 {
-    if (isInitialized == true)
-    {
-        return false;
-    }
-    isInitialized = false;
-    TZeroMemory(&state, sizeof(state));
+    *memoryRequirements = sizeof(event_system_state);
+    if (state == 0) return;
 
-    isInitialized = true;
-
-    return true;
+    TZeroMemory(state, sizeof(state));
+    statePtr = state;
 }
 
-void EventShutdown()
+void EventSystemShutdown(void* state)
 {
-    // Free the events arrays. And objects pointed to should be destroyed on their own.
-    for(u16 i = 0; i < MAX_MESSAGE_CODES; i++)
+    if (statePtr)
     {
-        if(state.registered[i].events != 0)
+        // Free the events arrays. And objects pointed to should be destroyed on their own.
+        for (u16 i = 0; i < MAX_MESSAGE_CODES; i++)
         {
-            DArrayDestroy(state.registered[i].events);
-            state.registered[i].events = 0;
+            if (statePtr->registered[i].events != 0)
+            {
+                DArrayDestroy(statePtr->registered[i].events);
+                statePtr->registered[i].events = 0;
+            }
         }
     }
+
+    statePtr = 0;
 }
 
 b8 EventRegister(u16 code, void* listener, PFN_on_event onEvent)
 {
-    if(isInitialized == false)
+    if (!statePtr) return false;
+
+    if (statePtr->registered[code].events == 0)
     {
-        return false;
+        statePtr->registered[code].events = DArrayCreate(registered_event);
     }
 
-    if(state.registered[code].events == 0)
+    u64 registeredCount = DArrayLength(statePtr->registered[code].events);
+    for (u64 i = 0; i < registeredCount; i++)
     {
-        state.registered[code].events = DArrayCreate(registered_event);
-    }
-
-    u64 registeredCount = DArrayLength(state.registered[code].events);
-    for(u64 i = 0; i < registeredCount; i++)
-    {
-        if(state.registered[code].events[i].listener == listener)
+        if (statePtr->registered[code].events[i].listener == listener)
         {
             // TODO: warn
             return false;
@@ -82,34 +78,31 @@ b8 EventRegister(u16 code, void* listener, PFN_on_event onEvent)
     registered_event event;
     event.listener = listener;
     event.callback = onEvent;
-    DArrayPush(state.registered[code].events, event);
+    DArrayPush(statePtr->registered[code].events, event);
 
     return true;
 }
 
 b8 EventUnregister(u16 code, void* listener, PFN_on_event onEvent)
 {
-    if(isInitialized == false)
-    {
-        return false;
-    }
+    if (!statePtr) return false;
 
     // On nothing is registered for the code, boot out.
-    if(state.registered[code].events == 0)
+    if (statePtr->registered[code].events == 0)
     {
         // TODO: warn
         return false;
     }
 
-    u64 registeredCount = DArrayLength(state.registered[code].events);
-    for(u64 i = 0; i < registeredCount; i++)
+    u64 registeredCount = DArrayLength(statePtr->registered[code].events);
+    for (u64 i = 0; i < registeredCount; i++)
     {
-        registered_event e = state.registered[code].events[i];
-        if(e.listener == listener && e.callback == onEvent)
+        registered_event e = statePtr->registered[code].events[i];
+        if (e.listener == listener && e.callback == onEvent)
         {
             // Found one, remove it
             registered_event poppedEvent;
-            DArrayPopAt(state.registered[code].events, i, &poppedEvent);
+            DArrayPopAt(statePtr->registered[code].events, i, &poppedEvent);
             return true;
         }
     }
@@ -120,22 +113,19 @@ b8 EventUnregister(u16 code, void* listener, PFN_on_event onEvent)
 
 b8 EventFire(u16 code, void* sender, event_context context)
 {
-    if(isInitialized == false)
-    {
-        return false;
-    }
+    if (!statePtr) return false;
 
     // If nothing is registered for the code, boot out.
-    if(state.registered[code].events == 0)
+    if (statePtr->registered[code].events == 0)
     {
         return false;
     }
 
-    u64 registeredCount = DArrayLength(state.registered[code].events);
-    for(u64 i = 0; i < registeredCount; i++)
+    u64 registeredCount = DArrayLength(statePtr->registered[code].events);
+    for (u64 i = 0; i < registeredCount; i++)
     {
-        registered_event e = state.registered[code].events[i];
-        if(e.callback(code, sender, e.listener, context))
+        registered_event e = statePtr->registered[code].events[i];
+        if (e.callback(code, sender, e.listener, context))
         {
             // Message has been handled, do not send to other listeners.
             return true;

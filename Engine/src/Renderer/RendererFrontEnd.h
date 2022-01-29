@@ -4,8 +4,8 @@
 struct static_mesh_data;
 struct platform_state;
 
-b8 RendererInitialize(const char* applicationName, struct platform_state* platState);
-void RendererShutdown();
+b8 RendererSystemInitialize(u64* memoryRequirement, void* state, const char* applicationName);
+void RendererSystemShutdown(void* state);
 
 void RendererOnResized(u16 width, u16 height);
 

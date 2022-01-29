@@ -4,9 +4,7 @@
 struct platform_state;
 struct vulkan_context;
 
-b8 PlatformCreateVulkanSurface(
-    struct platform_state* platState,
-    struct vulkan_context* context);
+b8 PlatformCreateVulkanSurface(struct vulkan_context* context);
 
 /**
  * Appends the names of required extensions for this platform to

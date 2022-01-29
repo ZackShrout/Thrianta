@@ -16,8 +16,8 @@
 
 // static Vulkan context
 static vulkan_context context;
-static u32 cachedFramebufferWidth;
-static u32 cachedFramebufferHeight;
+static u32 cachedFramebufferWidth = 0;
+static u32 cachedFramebufferHeight = 0;
 
 VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -31,7 +31,7 @@ void CreateCommandBuffers(renderer_backend* backend);
 void RegenerateFramebuffers(renderer_backend* backend, vulkan_swapchain* swapchain, vulkan_renderpass* renderpass);
 b8 RecreateSwapchain(renderer_backend* backend);
 
-b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applicationName, struct platform_state* platState)
+b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applicationName)
 {
     // Function pointers
     context.FindMemoryIndex = FindMemoryIndex;
@@ -144,7 +144,7 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
 
     // Surface
     TDEBUG("Creating Vulkan surface...");
-    if (!PlatformCreateVulkanSurface(platState, &context))
+    if (!PlatformCreateVulkanSurface(&context))
     {
         TERROR("Failed to create platform surface!");
         return false;
