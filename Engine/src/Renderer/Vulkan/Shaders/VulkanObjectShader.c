@@ -25,7 +25,12 @@ b8 VulkanObjectShaderCreate(vulkan_context* context, vulkan_object_shader* outSh
 
 void VulkanObjectShaderDestroy(vulkan_context* context, struct vulkan_object_shader* shader)
 {
-
+    // Destroy shader modules.
+    for (u32 i = 0; i < OBJECT_SHADER_STAGE_COUNT; i++)
+    {
+        vkDestroyShaderModule(context->device.logicalDevice, shader->stages[i].handle, context->allocator);
+        shader->stages[i].handle = 0;
+    }
 }
 
 void VulkanObjectShaderUse(vulkan_context* context, struct vulkan_object_shader* shader)

@@ -1,18 +1,33 @@
 #include "Logger.h"
 #include "Asserts.h"
 #include "Platform/Platform.h"
+#include "Platform/Filesystem.h"
+#include "TString.h"
+#include "TMemory.h"
 
 // TODO: temporary
-#include <stdio.h>
-#include <string.h>
 #include <stdarg.h>
 
 typedef struct logger_system_state
 {
-    b8 initialized;
+    file_handle logFileHandle;
 } logger_system_state;
 
 static logger_system_state* statePtr;
+
+void AppendToLogFile(const char* message)
+{
+    if (statePtr && statePtr->logFileHandle.isValid)
+    {
+        // Since the message already contains a '\n', just write the bytes directly.
+        u64 length = StringLength(message);
+        u64 written = 0;
+        if (!FilesystemWrite(&statePtr->logFileHandle, length, message, &written))
+        {
+            PlatformConsoleWriteError("ERROR writing to console.log.", LOG_LEVEL_ERROR);
+        }
+    }
+}
 
 b8 LoggingSystemInitialize(u64* memoryRequirement, void* state)
 {
@@ -20,7 +35,13 @@ b8 LoggingSystemInitialize(u64* memoryRequirement, void* state)
     if (state == 0) return true;
     
     statePtr = state;
-    statePtr->initialized = true;
+
+    // Create new/wipe existing log file, then open it.
+    if (!FilesystemOpen("console.log", FILE_MODE_WRITE, false, &statePtr->logFileHandle))
+    {
+        PlatformConsoleWriteError("ERROR: Unable to open console.log for writing.", LOG_LEVEL_ERROR);
+        return false;
+    }
 
     // TODO: Remove this
     TFATAL("A test message: %f", 3.14f);
@@ -30,7 +51,6 @@ b8 LoggingSystemInitialize(u64* memoryRequirement, void* state)
     TDEBUG("A test message: %f", 3.14f);
     TTRACE("A test message: %f", 3.14f); 
     
-    // TODO: create log file.
     return true;
 }
 
@@ -42,14 +62,16 @@ void ShutdownLogging(void* state)
 
 void LogOutput(log_level level, const char* message, ...)
 {
+    // TODO: These string operations are all pretty slow. This needs to be
+    // moved to another thread eventually, along with the file writes, to
+    // avoid slowing things down while the engine is trying to run.
     const char* levelStrings[6] = {"[FATAL]: ", "[ERROR]: ", "[WARN]:  ", "[INFO]:  ", "[DEBUG]: ", "[TRACE]: "};
     b8 isError = level < LOG_LEVEL_WARN;
 
     // Technically imposes a 32k character limit on a single log entry, but...
     // DON'T DO THAT!
-    const s32 msgLength = 32000;
-    char outMessage[msgLength];
-    memset(outMessage, 0, sizeof(outMessage));
+    char outMessage[32000];
+    TZeroMemory(outMessage, sizeof(outMessage));
 
     // Format original message.
     // NOTE: Oddly enough, MS's headers override the GCC/Clang va_list type with a "typedef char* va_list" in some
@@ -57,21 +79,20 @@ void LogOutput(log_level level, const char* message, ...)
     // which is the type GCC/Clang's va_start expects.
     __builtin_va_list argPtr;
     va_start(argPtr, message);
-    vsnprintf(outMessage, msgLength, message, argPtr);
+    StringFormat(outMessage, message, argPtr);
     va_end(argPtr);
 
-    char outMessage2[msgLength];
-    sprintf(outMessage2, "%s%s\n", levelStrings[level], outMessage);
+    // Prepend log level to message.
+    StringFormat(outMessage, "%s%s\n", levelStrings[level], outMessage);
 
-    // Platform-specific output.
+    // Print message to console
     if (isError)
-    {
-        PlatformConsoleWriteError(outMessage2, level);
-    }
+        PlatformConsoleWriteError(outMessage, level);
     else
-    {
-        PlatformConsoleWrite(outMessage2, level);
-    }
+        PlatformConsoleWrite(outMessage, level);
+    
+    // Queue a copy to be written to the log file.
+    AppendToLogFile(outMessage);
 }
 
 void ReportAssertionFailure(const char* expression, const char* message, const char* file, s32 line)
