@@ -470,12 +470,12 @@ b8 VulkanRendererBackendBeginFrame(renderer_backend* backend, f32 dt)
 
 void VulkanRendererUpdateGlobalState(mat4 projection, mat4 view, vec3 view_position, vec4 ambient_colour, s32 mode)
 {
-    vulkan_command_buffer* command_buffer = &context.graphicsCommandBuffers[context.imageIndex];
+    vulkan_command_buffer* cmdBuffer = &context.graphicsCommandBuffers[context.imageIndex];
 
     VulkanObjectShaderUse(&context, &context.objectShader);
 
-    context.objectShader.global_ubo.projection = projection;
-    context.objectShader.global_ubo.view = view;
+    context.objectShader.globalUBO.projection = projection;
+    context.objectShader.globalUBO.view = view;
 
     // TODO: other ubo properties
 
@@ -486,13 +486,13 @@ void VulkanRendererUpdateGlobalState(mat4 projection, mat4 view, vec3 view_posit
 
     // Bind vertex buffer at offset.
     VkDeviceSize offsets[1] = {0};
-    vkCmdBindVertexBuffers(command_buffer->handle, 0, 1, &context.objectVertexBuffer.handle, (VkDeviceSize*)offsets);
+    vkCmdBindVertexBuffers(cmdBuffer->handle, 0, 1, &context.objectVertexBuffer.handle, (VkDeviceSize*)offsets);
 
     // Bind index buffer at offset.
-    vkCmdBindIndexBuffer(command_buffer->handle, context.objectIndexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindIndexBuffer(cmdBuffer->handle, context.objectIndexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
 
     // Issue the draw.
-    vkCmdDrawIndexed(command_buffer->handle, 6, 1, 0, 0, 0);
+    vkCmdDrawIndexed(cmdBuffer->handle, 6, 1, 0, 0, 0);
     // TODO: end temporary test code
 }
 

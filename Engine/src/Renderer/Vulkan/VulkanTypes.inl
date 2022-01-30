@@ -11,7 +11,8 @@
         TASSERT(expr == VK_SUCCESS); \
     }
 
-typedef struct vulkan_buffer {
+typedef struct vulkan_buffer
+{
     u64 totalSize;
     VkBuffer handle;
     VkBufferUsageFlagBits usage;
@@ -77,7 +78,8 @@ typedef struct vulkan_renderpass
     vulkan_render_pass_state state;
 } vulkan_renderpass;
 
-typedef struct vulkan_framebuffer {
+typedef struct vulkan_framebuffer
+{
     VkFramebuffer handle;
     u32 attachmentCount;
     VkImageView* attachments;
@@ -134,17 +136,13 @@ typedef struct vulkan_pipeline
 #define OBJECT_SHADER_STAGE_COUNT 2
 typedef struct vulkan_object_shader
 {
-    // vertex, fragment
-    vulkan_shader_stage stages[OBJECT_SHADER_STAGE_COUNT];
+    vulkan_shader_stage stages[OBJECT_SHADER_STAGE_COUNT]; // vertex, fragment
+    VkDescriptorPool globalDescPool;
+    VkDescriptorSetLayout globalDescSetLayout;
+    VkDescriptorSet globalDescSets[3]; // One descriptor set per frame - max 3 for triple-buffering.
+    global_uniform_object globalUBO; // Global uniform object.
+    vulkan_buffer globalUniformBuffer; // Global uniform buffer.
     vulkan_pipeline pipeline;
-    VkDescriptorPool global_descriptor_pool;
-    VkDescriptorSetLayout global_descriptor_set_layout;
-    // One descriptor set per frame - max 3 for triple-buffering.
-    VkDescriptorSet global_descriptor_sets[3];
-    // Global uniform object.
-    global_uniform_object global_ubo;
-    // Global uniform buffer.
-    vulkan_buffer global_uniform_buffer;
 } vulkan_object_shader;
 
 typedef struct vulkan_context
