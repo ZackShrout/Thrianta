@@ -2,6 +2,7 @@
 #include "RendererBackEnd.h"
 #include "Core/Logger.h"
 #include "Core/TMemory.h"
+#include "Math/TMath.h"
 
 typedef struct renderer_system_state {
     renderer_backend backend;
@@ -71,9 +72,13 @@ b8 RendererDrawFrame(render_packet* packet)
     // If the begin frame returned successfully, mid-frame operations may continue.
     if (RendererBeginFrame(packet->dt))
     {
-        // TODO:
-        // ...
-        // ...
+        mat4 projection = mat4_perspective(deg_to_rad(45.0f), 1280 / 720.0f, 0.1f, 1000.0f);
+        static f32 z = -1.0f;
+        z -= 0.005f;
+        mat4 view = mat4_translation((vec3){0, 0, z});
+
+        statePtr->backend.update_global_state(projection, view, vec3_zero(), vec4_one(), 0);
+
         // End the frame. If this fails, it is likely unrecoverable.
         b8 result = RendererEndFrame(packet->dt);
 

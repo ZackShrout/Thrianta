@@ -242,17 +242,19 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     vertex_3d verts[vertCount];
     TZeroMemory(verts, sizeof(vertex_3d) * vertCount);
 
-    verts[0].position.x = 0.0;
-    verts[0].position.y = -0.5;
+    const f32 f = 10.0f;
 
-    verts[1].position.x = 0.5;
-    verts[1].position.y = 0.5;
+    verts[0].position.x = -0.5 * f;
+    verts[0].position.y = -0.5 * f;
 
-    verts[2].position.x = 0;
-    verts[2].position.y = 0.5;
+    verts[1].position.y = 0.5 * f;
+    verts[1].position.x = 0.5 * f;
 
-    verts[3].position.x = 0.5;
-    verts[3].position.y = -0.5;
+    verts[2].position.x = -0.5 * f;
+    verts[2].position.y = 0.5 * f;
+
+    verts[3].position.x = 0.5 * f;
+    verts[3].position.y = -0.5 * f;
 
     const u32 indexCount = 6;
     u32 indices[indexCount] = {0, 1, 2, 0, 3, 1};
@@ -463,21 +465,35 @@ b8 VulkanRendererBackendBeginFrame(renderer_backend* backend, f32 dt)
         &context.mainRenderpass,
         context.swapchain.framebuffers[context.imageIndex].handle);
 
+    return true;
+}
+
+void VulkanRendererUpdateGlobalState(mat4 projection, mat4 view, vec3 view_position, vec4 ambient_colour, s32 mode)
+{
+    vulkan_command_buffer* command_buffer = &context.graphicsCommandBuffers[context.imageIndex];
+
+    VulkanObjectShaderUse(&context, &context.objectShader);
+
+    context.objectShader.global_ubo.projection = projection;
+    context.objectShader.global_ubo.view = view;
+
+    // TODO: other ubo properties
+
+    VulkanObjectShaderUpdateGlobalState(&context, &context.objectShader);
+
     // TODO: temporary test code
     VulkanObjectShaderUse(&context, &context.objectShader);
 
     // Bind vertex buffer at offset.
     VkDeviceSize offsets[1] = {0};
-    vkCmdBindVertexBuffers(commandBuffer->handle, 0, 1, &context.objectVertexBuffer.handle, (VkDeviceSize*)offsets);
+    vkCmdBindVertexBuffers(command_buffer->handle, 0, 1, &context.objectVertexBuffer.handle, (VkDeviceSize*)offsets);
 
     // Bind index buffer at offset.
-    vkCmdBindIndexBuffer(commandBuffer->handle, context.objectIndexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindIndexBuffer(command_buffer->handle, context.objectIndexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
 
     // Issue the draw.
-    vkCmdDrawIndexed(commandBuffer->handle, 6, 1, 0, 0, 0);
+    vkCmdDrawIndexed(command_buffer->handle, 6, 1, 0, 0, 0);
     // TODO: end temporary test code
-
-    return true;
 }
 
 b8 VulkanRendererBackendEndFrame(renderer_backend* backend, f32 dt)

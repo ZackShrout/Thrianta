@@ -4,6 +4,7 @@
 #include "Math/MathTypes.h"
 #include "Renderer/Vulkan/VulkanShaderUtils.h"
 #include "Renderer/Vulkan/VulkanPipeline.h"
+#include "Renderer/Vulkan/VulkanBuffer.h"
 
 #define BUILTIN_SHADER_NAME_OBJECT "Builtin.ObjectShader"
 
@@ -111,4 +112,37 @@ void VulkanObjectShaderUse(vulkan_context* context, struct vulkan_object_shader*
 {
     u32 imageIndex = context->imageIndex;
     VulkanPipelineBind(&context->graphicsCommandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, &shader->pipeline);
+}
+
+void VulkanObjectShaderUpdateGlobalState(vulkan_context* context, struct vulkan_object_shader* shader)
+{
+    u32 image_index = context->imageIndex;
+    VkCommandBuffer command_buffer = context->graphicsCommandBuffers[image_index].handle;
+    VkDescriptorSet global_descriptor = shader->global_descriptor_sets[image_index];
+
+    // Bind the global descriptor set to be updated.
+    vkCmdBindDescriptorSets(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shader->pipeline.pipelineLayout, 0, 1, &global_descriptor, 0, 0);
+
+    // Configure the descriptors for the given index.
+    u32 range = sizeof(global_uniform_object);
+    u64 offset = 0;
+
+    // Copy data to buffer
+    VulkanBufferLoadData(context, &shader->global_uniform_buffer, offset, range, 0, &shader->global_ubo);
+
+    VkDescriptorBufferInfo bufferInfo;
+    bufferInfo.buffer = shader->global_uniform_buffer.handle;
+    bufferInfo.offset = offset;
+    bufferInfo.range = range;
+
+    // Update descriptor sets.
+    VkWriteDescriptorSet descriptor_write = {VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET};
+    descriptor_write.dstSet = shader->global_descriptor_sets[image_index];
+    descriptor_write.dstBinding = 0;
+    descriptor_write.dstArrayElement = 0;
+    descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptor_write.descriptorCount = 1;
+    descriptor_write.pBufferInfo = &bufferInfo;
+
+    vkUpdateDescriptorSets(context->device.logicalDevice, 1, &descriptor_write, 0, 0);
 }
