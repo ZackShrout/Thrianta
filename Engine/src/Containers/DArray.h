@@ -26,11 +26,11 @@ TAPI void _DArrayFieldSet(void* array, u64 field, u64 value);
 
 TAPI void* _DArrayResize(void* array);
 
-TAPI void* _DArrayPush(void* array, const void* value_ptr);
+TAPI void* _DArrayPush(void* array, const void* valuePtr);
 TAPI void _DArrayPop(void* array, void* dest);
 
 TAPI void* _DArrayPopAt(void* array, u64 index, void* dest);
-TAPI void* _DArrayInsertAt(void* array, u64 index, void* value_ptr);
+TAPI void* _DArrayInsertAt(void* array, u64 index, void* valuePtr);
 
 #define DARRAY_DEFAULT_CAPACITY 1
 #define DARRAY_RESIZE_FACTOR 2
@@ -52,8 +52,8 @@ TAPI void* _DArrayInsertAt(void* array, u64 index, void* value_ptr);
 // for VSCode flags it as an unknown type. typeof() seems to
 // work just fine, though. Both are GNU extensions.
 
-#define DArrayPop(array, value_ptr) \
-    _DArrayPop(array, value_ptr)
+#define DArrayPop(array, valuePtr) \
+    _DArrayPop(array, valuePtr)
 
 #define DArrayInsertAt(array, index, value)           \
     {                                                 \
@@ -61,8 +61,8 @@ TAPI void* _DArrayInsertAt(void* array, u64 index, void* value_ptr);
         array = _DArrayInsertAt(array, index, &temp); \
     }
 
-#define DArrayPopAt(array, index, value_ptr) \
-    _DArrayPopAt(array, index, value_ptr)
+#define DArrayPopAt(array, index, valuePtr) \
+    _DArrayPopAt(array, index, valuePtr)
 
 #define DArrayClear(array) \
     _DArrayFieldSet(array, DARRAY_LENGTH, 0)

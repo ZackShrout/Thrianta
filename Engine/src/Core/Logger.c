@@ -79,7 +79,7 @@ void LogOutput(log_level level, const char* message, ...)
     // which is the type GCC/Clang's va_start expects.
     __builtin_va_list argPtr;
     va_start(argPtr, message);
-    StringFormat(outMessage, message, argPtr);
+    StringFormatV(outMessage, message, argPtr);
     va_end(argPtr);
 
     // Prepend log level to message.

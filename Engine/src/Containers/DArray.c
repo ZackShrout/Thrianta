@@ -18,8 +18,8 @@ void _DArrayDestroy(void* array)
 {
     u64* header = (u64*)array - DARRAY_FIELD_LENGTH;
     u64 header_size = DARRAY_FIELD_LENGTH * sizeof(u64);
-    u64 total_size = header_size + header[DARRAY_CAPACITY] * header[DARRAY_STRIDE];
-    TFree(header, total_size, MEMORY_TAG_DARRAY);
+    u64 totalSize = header_size + header[DARRAY_CAPACITY] * header[DARRAY_STRIDE];
+    TFree(header, totalSize, MEMORY_TAG_DARRAY);
 }
 
 u64 _DArrayFieldGet(void* array, u64 field)
@@ -48,7 +48,7 @@ void* _DArrayResize(void* array)
     return temp;
 }
 
-void* _DArrayPush(void* array, const void* value_ptr)
+void* _DArrayPush(void* array, const void* valuePtr)
 {
     u64 length = DArrayLength(array);
     u64 stride = DArrayStride(array);
@@ -59,7 +59,7 @@ void* _DArrayPush(void* array, const void* value_ptr)
 
     u64 addr = (u64)array;
     addr += (length * stride);
-    TCopyMemory((void*)addr, value_ptr, stride);
+    TCopyMemory((void*)addr, valuePtr, stride);
     _DArrayFieldSet(array, DARRAY_LENGTH, length + 1);
     return array;
 }
@@ -100,7 +100,7 @@ void* _DArrayPopAt(void* array, u64 index, void* dest)
     return array;
 }
 
-void* _DArrayInsertAt(void* array, u64 index, void* value_ptr)
+void* _DArrayInsertAt(void* array, u64 index, void* valuePtr)
 {
     u64 length = DArrayLength(array);
     u64 stride = DArrayStride(array);
@@ -127,7 +127,7 @@ void* _DArrayInsertAt(void* array, u64 index, void* value_ptr)
     }
 
     // Set the value at the index
-    TCopyMemory((void*)(addr + (index * stride)), value_ptr, stride);
+    TCopyMemory((void*)(addr + (index * stride)), valuePtr, stride);
 
     _DArrayFieldSet(array, DARRAY_LENGTH, length + 1);
     return array;

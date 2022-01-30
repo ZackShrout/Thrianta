@@ -21,7 +21,7 @@ b8 VulkanObjectShaderCreate(vulkan_context* context, vulkan_object_shader* outSh
         }
     }
 
-    // Descriptors
+    // TODO: Descriptors
 
     // Pipeline creation
     VkViewport viewport;
@@ -42,6 +42,7 @@ b8 VulkanObjectShaderCreate(vulkan_context* context, vulkan_object_shader* outSh
     u32 offset = 0;
     const s32 attributeCount = 1;
     VkVertexInputAttributeDescription attributeDesc[attributeCount];
+    
     // Position
     VkFormat formats[attributeCount] =
     {
@@ -51,6 +52,7 @@ b8 VulkanObjectShaderCreate(vulkan_context* context, vulkan_object_shader* outSh
     {
         sizeof(vec3)
     };
+
     for (u32 i = 0; i < attributeCount; i++)
     {
         attributeDesc[i].binding = 0;   // binding index - should match binding desc

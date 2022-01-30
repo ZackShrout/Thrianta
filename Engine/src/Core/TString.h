@@ -11,10 +11,10 @@ TAPI b8 StringsEqual(const char* str0, const char* str1);
 TAPI s32 StringFormat(char* dest, const char* format, ...);
 //
 /**
- * Performs variadic string formatting to dest given format string and va_list.
+ * Performs variadic string formatting to dest given format string and vaList.
  * @param dest The destination for the formatted string.
  * @param format The string to be formatted.
- * @param va_list The variadic argument list.
+ * @param vaList The variadic argument list.
  * @returns The size of the data written.
  */
-TAPI s32 StringFormatV(char* dest, const char* format, void* va_list);
+TAPI s32 StringFormatV(char* dest, const char* format, void* vaList);
