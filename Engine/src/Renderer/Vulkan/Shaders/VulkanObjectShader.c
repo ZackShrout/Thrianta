@@ -42,7 +42,7 @@ b8 VulkanObjectShaderCreate(vulkan_context* context, vulkan_object_shader* outSh
     u32 offset = 0;
     const s32 attributeCount = 1;
     VkVertexInputAttributeDescription attributeDesc[attributeCount];
-    
+
     // Position
     VkFormat formats[attributeCount] =
     {
@@ -109,5 +109,6 @@ void VulkanObjectShaderDestroy(vulkan_context* context, struct vulkan_object_sha
 
 void VulkanObjectShaderUse(vulkan_context* context, struct vulkan_object_shader* shader)
 {
-
+    u32 imageIndex = context->imageIndex;
+    VulkanPipelineBind(&context->graphicsCommandBuffers[imageIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, &shader->pipeline);
 }

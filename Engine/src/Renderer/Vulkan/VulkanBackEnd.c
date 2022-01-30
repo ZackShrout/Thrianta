@@ -35,6 +35,24 @@ void CreateCommandBuffers(renderer_backend* backend);
 void RegenerateFramebuffers(renderer_backend* backend, vulkan_swapchain* swapchain, vulkan_renderpass* renderpass);
 b8 RecreateSwapchain(renderer_backend* backend);
 
+// TODO: temporary method for testing geometry
+void UploadDataRange(vulkan_context* context, VkCommandPool pool, VkFence fence, VkQueue queue, vulkan_buffer* buffer, u64 offset, u64 size, void* data)
+{
+    // Create a host-visible staging buffer to upload to. Mark it as the source of the transfer.
+    VkBufferUsageFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+    vulkan_buffer staging;
+    VulkanBufferCreate(context, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, flags, true, &staging);
+
+    // Load the data into the staging buffer.
+    VulkanBufferLoadData(context, &staging, 0, size, 0, data);
+
+    // Perform the copy from staging to the device local buffer.
+    VulkanBufferCopyTo(context, pool, fence, queue, staging.handle, 0, buffer->handle, offset, size);
+
+    // Clean up the staging buffer.
+    VulkanBufferDestroy(context, &staging);
+}
+
 b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applicationName)
 {
     // Function pointers
@@ -218,6 +236,30 @@ b8 VulkanRendererBackendInitialize(renderer_backend* backend, const char* applic
     }
 
     CreateBuffers(&context);
+
+    // TODO: temporary test code
+    const u32 vertCount = 4;
+    vertex_3d verts[vertCount];
+    TZeroMemory(verts, sizeof(vertex_3d) * vertCount);
+
+    verts[0].position.x = 0.0;
+    verts[0].position.y = -0.5;
+
+    verts[1].position.x = 0.5;
+    verts[1].position.y = 0.5;
+
+    verts[2].position.x = 0;
+    verts[2].position.y = 0.5;
+
+    verts[3].position.x = 0.5;
+    verts[3].position.y = -0.5;
+
+    const u32 indexCount = 6;
+    u32 indices[indexCount] = {0, 1, 2, 0, 3, 1};
+
+    UploadDataRange(&context, context.device.graphicsCommandPool, 0, context.device.graphicsQueue, &context.objectVertexBuffer, 0, sizeof(vertex_3d) * vertCount, verts);
+    UploadDataRange(&context, context.device.graphicsCommandPool, 0, context.device.graphicsQueue, &context.objectIndexBuffer, 0, sizeof(u32) * indexCount, indices);
+    // TODO: end temp code
     
     TINFO("Vulkan renderer initialized successfully.");
     return true;
@@ -420,6 +462,21 @@ b8 VulkanRendererBackendBeginFrame(renderer_backend* backend, f32 dt)
         commandBuffer,
         &context.mainRenderpass,
         context.swapchain.framebuffers[context.imageIndex].handle);
+
+    // TODO: temporary test code
+    VulkanObjectShaderUse(&context, &context.objectShader);
+
+    // Bind vertex buffer at offset.
+    VkDeviceSize offsets[1] = {0};
+    vkCmdBindVertexBuffers(commandBuffer->handle, 0, 1, &context.objectVertexBuffer.handle, (VkDeviceSize*)offsets);
+
+    // Bind index buffer at offset.
+    vkCmdBindIndexBuffer(commandBuffer->handle, context.objectIndexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+
+    // Issue the draw.
+    vkCmdDrawIndexed(commandBuffer->handle, 6, 1, 0, 0, 0);
+    // TODO: end temporary test code
+
     return true;
 }
 
