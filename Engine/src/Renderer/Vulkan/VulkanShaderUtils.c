@@ -54,11 +54,5 @@ b8 CreateShaderModule(
     shaderStages[stageIndex].shaderStageCreateInfo.module = shaderStages[stageIndex].handle;
     shaderStages[stageIndex].shaderStageCreateInfo.pName = "main";
 
-    if (fileBuffer)
-    {
-        TFree(fileBuffer, sizeof(u8) * size, MEMORY_TAG_STRING);
-        fileBuffer = 0;
-    }
-
     return true;
 }
