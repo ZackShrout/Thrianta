@@ -122,11 +122,14 @@ b8 VulkanObjectShaderCreate(vulkan_context* context, vulkan_object_shader* outSh
     }
 
     // Create uniform buffer.
+    u32 deviceLocalBits = context->device.supportsDeviceLocalHostVisible ? VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT : 0;
+    // TODO: temp - need to fix bug here.
+    deviceLocalBits = 0;
     if (!VulkanBufferCreate(
             context,
-            sizeof(global_uniform_object),
-            /*VK_BUFFER_USAGE_TRANSFER_DST_BIT | */VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            /*VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | */VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            sizeof(global_uniform_object) * 3,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | deviceLocalBits,
             true,
             &outShader->globalUniformBuffer))
     {
@@ -187,12 +190,9 @@ void VulkanObjectShaderUpdateGlobalState(vulkan_context* context, struct vulkan_
     VkCommandBuffer cmdBuffer = context->graphicsCommandBuffers[imageIndex].handle;
     VkDescriptorSet globalDesc = shader->globalDescSets[imageIndex];
 
-    // Bind the global descriptor set to be updated.
-    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shader->pipeline.pipelineLayout, 0, 1, &globalDesc, 0, 0);
-
     // Configure the descriptors for the given index.
     u32 range = sizeof(global_uniform_object);
-    u64 offset = 0;
+    u64 offset = sizeof(global_uniform_object) * imageIndex;
 
     // Copy data to buffer
     VulkanBufferLoadData(context, &shader->globalUniformBuffer, offset, range, 0, &shader->globalUBO);
@@ -212,4 +212,7 @@ void VulkanObjectShaderUpdateGlobalState(vulkan_context* context, struct vulkan_
     descriptor_write.pBufferInfo = &bufferInfo;
 
     vkUpdateDescriptorSets(context->device.logicalDevice, 1, &descriptor_write, 0, 0);
+
+    // Bind the global descriptor set to be updated.
+    vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shader->pipeline.pipelineLayout, 0, 1, &globalDesc, 0, 0);
 }
