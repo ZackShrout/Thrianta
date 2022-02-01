@@ -6,3 +6,4 @@ b8 VulkanObjectShaderCreate(vulkan_context* context, vulkan_object_shader* outSh
 void VulkanObjectShaderDestroy(vulkan_context* context, struct vulkan_object_shader* shader);
 void VulkanObjectShaderUse(vulkan_context* context, struct vulkan_object_shader* shader);
 void VulkanObjectShaderUpdateGlobalState(vulkan_context* context, struct vulkan_object_shader* shader);
+void VulkanObjectShaderUpdateObject(vulkan_context* context, struct vulkan_object_shader* shader, mat4 model);

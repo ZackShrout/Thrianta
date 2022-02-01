@@ -26,7 +26,8 @@ typedef struct renderer_backend
     void (*resized)(struct renderer_backend* backend, u16 width, u16 height);
     b8 (*begin_frame)(struct renderer_backend* backend, f32 dt);
     void (*update_global_state)(mat4 projection, mat4 view, vec3 viewPosition, vec4 ambientColor, s32 mode);
-    b8 (*end_frame)(struct renderer_backend* backend, f32 dt);    
+    b8 (*end_frame)(struct renderer_backend* backend, f32 dt);   
+    void (*update_object)(mat4 model);
 } renderer_backend;
 
 typedef struct render_packet

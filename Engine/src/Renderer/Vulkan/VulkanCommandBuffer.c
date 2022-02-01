@@ -26,20 +26,20 @@ void VulkanCommandBufferAllocate(
 void VulkanCommandBufferFree(
     vulkan_context* context,
     VkCommandPool pool,
-    vulkan_command_buffer* commandBuffer)
+    vulkan_command_buffer* cmdBuffer)
 {
     vkFreeCommandBuffers(
         context->device.logicalDevice,
         pool,
         1,
-        &commandBuffer->handle);
+        &cmdBuffer->handle);
 
-    commandBuffer->handle = 0;
-    commandBuffer->state = COMMAND_BUFFER_STATE_NOT_ALLOCATED;
+    cmdBuffer->handle = 0;
+    cmdBuffer->state = COMMAND_BUFFER_STATE_NOT_ALLOCATED;
 }
 
 void VulkanCommandBufferBegin(
-    vulkan_command_buffer* commandBuffer,
+    vulkan_command_buffer* cmdBuffer,
     b8 isSingleUse,
     b8 isRenderpassContinue,
     b8 isSimultaneousUse)
@@ -59,24 +59,24 @@ void VulkanCommandBufferBegin(
         beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
     }
 
-    VK_CHECK(vkBeginCommandBuffer(commandBuffer->handle, &beginInfo));
-    commandBuffer->state = COMMAND_BUFFER_STATE_RECORDING;
+    VK_CHECK(vkBeginCommandBuffer(cmdBuffer->handle, &beginInfo));
+    cmdBuffer->state = COMMAND_BUFFER_STATE_RECORDING;
 }
 
-void VulkanCommandBufferEnd(vulkan_command_buffer* commandBuffer)
+void VulkanCommandBufferEnd(vulkan_command_buffer* cmdBuffer)
 {
-    VK_CHECK(vkEndCommandBuffer(commandBuffer->handle));
-    commandBuffer->state = COMMAND_BUFFER_STATE_RECORDING_ENDED;
+    VK_CHECK(vkEndCommandBuffer(cmdBuffer->handle));
+    cmdBuffer->state = COMMAND_BUFFER_STATE_RECORDING_ENDED;
 }
 
-void VulkanCommandBufferUpdateSubmitted(vulkan_command_buffer* commandBuffer)
+void VulkanCommandBufferUpdateSubmitted(vulkan_command_buffer* cmdBuffer)
 {
-    commandBuffer->state = COMMAND_BUFFER_STATE_SUBMITTED;
+    cmdBuffer->state = COMMAND_BUFFER_STATE_SUBMITTED;
 }
 
-void VulkanCommandBufferReset(vulkan_command_buffer* commandBuffer)
+void VulkanCommandBufferReset(vulkan_command_buffer* cmdBuffer)
 {
-    commandBuffer->state = COMMAND_BUFFER_STATE_READY;
+    cmdBuffer->state = COMMAND_BUFFER_STATE_READY;
 }
 
 void VulkanCommandBufferAllocateAndBeginSingleUse(
@@ -91,21 +91,21 @@ void VulkanCommandBufferAllocateAndBeginSingleUse(
 void VulkanCommandBufferEndSingleUse(
     vulkan_context* context,
     VkCommandPool pool,
-    vulkan_command_buffer* commandBuffer,
+    vulkan_command_buffer* cmdBuffer,
     VkQueue queue)
 {
     // End the command buffer.
-    VulkanCommandBufferEnd(commandBuffer);
+    VulkanCommandBufferEnd(cmdBuffer);
 
     // Submit the queue
     VkSubmitInfo submitInfo = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer->handle;
+    submitInfo.pCommandBuffers = &cmdBuffer->handle;
     VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, 0));
 
     // Wait for it to finish
     VK_CHECK(vkQueueWaitIdle(queue));
 
     // Free the command buffer.
-    VulkanCommandBufferFree(context, pool, commandBuffer);
+    VulkanCommandBufferFree(context, pool, cmdBuffer);
  }

@@ -15,4 +15,4 @@ b8 VulkanGraphicsPipelineCreate(
     b8 isWireframe,
     vulkan_pipeline* outPipeline);
 void VulkanPipelineDestroy(vulkan_context* context, vulkan_pipeline* pipeline);
-void VulkanPipelineBind(vulkan_command_buffer* commandBuffer, VkPipelineBindPoint bindPoint, vulkan_pipeline* pipeline);
+void VulkanPipelineBind(vulkan_command_buffer* cmdBuffer, VkPipelineBindPoint bindPoint, vulkan_pipeline* pipeline);

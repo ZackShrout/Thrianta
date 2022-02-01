@@ -434,9 +434,9 @@ b8 VulkanRendererBackendBeginFrame(renderer_backend* backend, f32 dt)
     }
 
     // Begin recording commands.
-    vulkan_command_buffer* commandBuffer = &context.graphicsCommandBuffers[context.imageIndex];
-    VulkanCommandBufferReset(commandBuffer);
-    VulkanCommandBufferBegin(commandBuffer, false, false, false);
+    vulkan_command_buffer* cmdBuffer = &context.graphicsCommandBuffers[context.imageIndex];
+    VulkanCommandBufferReset(cmdBuffer);
+    VulkanCommandBufferBegin(cmdBuffer, false, false, false);
 
     // Dynamic state
     VkViewport viewport;
@@ -453,15 +453,15 @@ b8 VulkanRendererBackendBeginFrame(renderer_backend* backend, f32 dt)
     scissor.extent.width = context.framebufferWidth;
     scissor.extent.height = context.framebufferHeight;
 
-    vkCmdSetViewport(commandBuffer->handle, 0, 1, &viewport);
-    vkCmdSetScissor(commandBuffer->handle, 0, 1, &scissor);
+    vkCmdSetViewport(cmdBuffer->handle, 0, 1, &viewport);
+    vkCmdSetScissor(cmdBuffer->handle, 0, 1, &scissor);
 
     context.mainRenderpass.w = context.framebufferWidth;
     context.mainRenderpass.h = context.framebufferHeight;
 
     // Begin the render pass.
     VulkanRenderpassBegin(
-        commandBuffer,
+        cmdBuffer,
         &context.mainRenderpass,
         context.swapchain.framebuffers[context.imageIndex].handle);
 
@@ -480,30 +480,16 @@ void VulkanRendererUpdateGlobalState(mat4 projection, mat4 view, vec3 view_posit
     // TODO: other ubo properties
 
     VulkanObjectShaderUpdateGlobalState(&context, &context.objectShader);
-
-    // TODO: temporary test code
-    VulkanObjectShaderUse(&context, &context.objectShader);
-
-    // Bind vertex buffer at offset.
-    VkDeviceSize offsets[1] = {0};
-    vkCmdBindVertexBuffers(cmdBuffer->handle, 0, 1, &context.objectVertexBuffer.handle, (VkDeviceSize*)offsets);
-
-    // Bind index buffer at offset.
-    vkCmdBindIndexBuffer(cmdBuffer->handle, context.objectIndexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
-
-    // Issue the draw.
-    vkCmdDrawIndexed(cmdBuffer->handle, 6, 1, 0, 0, 0);
-    // TODO: end temporary test code
 }
 
 b8 VulkanRendererBackendEndFrame(renderer_backend* backend, f32 dt)
 {
-    vulkan_command_buffer* commandBuffer = &context.graphicsCommandBuffers[context.imageIndex];
+    vulkan_command_buffer* cmdBuffer = &context.graphicsCommandBuffers[context.imageIndex];
 
     // End renderpass
-    VulkanRenderpassEnd(commandBuffer, &context.mainRenderpass);
+    VulkanRenderpassEnd(cmdBuffer, &context.mainRenderpass);
 
-    VulkanCommandBufferEnd(commandBuffer);
+    VulkanCommandBufferEnd(cmdBuffer);
 
     // Make sure the previous frame is not using this image (i.e. its fence is being waited on)
     if (context.imagesInFlight[context.imageIndex] != VK_NULL_HANDLE) // was frame
@@ -526,7 +512,7 @@ b8 VulkanRendererBackendEndFrame(renderer_backend* backend, f32 dt)
 
     // Command buffer(s) to be executed.
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer->handle;
+    submitInfo.pCommandBuffers = &cmdBuffer->handle;
 
     // The semaphore(s) to be signaled when the queue is complete.
     submitInfo.signalSemaphoreCount = 1;
@@ -553,7 +539,7 @@ b8 VulkanRendererBackendEndFrame(renderer_backend* backend, f32 dt)
         return false;
     }
 
-    VulkanCommandBufferUpdateSubmitted(commandBuffer);
+    VulkanCommandBufferUpdateSubmitted(cmdBuffer);
     // End queue submission
 
     // Give the image back to the swapchain.
@@ -566,6 +552,27 @@ b8 VulkanRendererBackendEndFrame(renderer_backend* backend, f32 dt)
         context.imageIndex);
     
     return true;
+}
+
+void VulkanBackendUpdateObject(mat4 model)
+{
+    vulkan_command_buffer* cmdBuffer = &context.graphicsCommandBuffers[context.imageIndex];
+    
+    VulkanObjectShaderUpdateObject(&context, &context.objectShader, model);
+
+    // TODO: temporary test code
+    VulkanObjectShaderUse(&context, &context.objectShader);
+
+    // Bind vertex buffer at offset.
+    VkDeviceSize offsets[1] = {0};
+    vkCmdBindVertexBuffers(cmdBuffer->handle, 0, 1, &context.objectVertexBuffer.handle, (VkDeviceSize*)offsets);
+
+    // Bind index buffer at offset.
+    vkCmdBindIndexBuffer(cmdBuffer->handle, context.objectIndexBuffer.handle, 0, VK_INDEX_TYPE_UINT32);
+
+    // Issue the draw.
+    vkCmdDrawIndexed(cmdBuffer->handle, 6, 1, 0, 0, 0);
+    // TODO: end temporary test code
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL VKDebugCallback(

@@ -216,3 +216,11 @@ void VulkanObjectShaderUpdateGlobalState(vulkan_context* context, struct vulkan_
     // Bind the global descriptor set to be updated.
     vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, shader->pipeline.pipelineLayout, 0, 1, &globalDesc, 0, 0);
 }
+
+void VulkanObjectShaderUpdateObject(vulkan_context* context, struct vulkan_object_shader* shader, mat4 model)
+{
+    u32 imageIndex = context->imageIndex;
+    VkCommandBuffer cmdBuffer = context->graphicsCommandBuffers[imageIndex].handle;
+
+    vkCmdPushConstants(cmdBuffer, shader->pipeline.pipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(mat4), &model);
+}

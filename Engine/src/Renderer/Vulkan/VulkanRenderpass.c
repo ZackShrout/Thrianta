@@ -123,7 +123,7 @@ void VulkanRenderpassDestroy(vulkan_context* context, vulkan_renderpass* renderp
 }
 
 void VulkanRenderpassBegin(
-    vulkan_command_buffer* commandBuffer,
+    vulkan_command_buffer* cmdBuffer,
     vulkan_renderpass* renderpass,
     VkFramebuffer frameBuffer)
 {
@@ -147,12 +147,12 @@ void VulkanRenderpassBegin(
     beginInfo.clearValueCount = 2;
     beginInfo.pClearValues = clear_values;
 
-    vkCmdBeginRenderPass(commandBuffer->handle, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
-    commandBuffer->state = COMMAND_BUFFER_STATE_IN_RENDER_PASS;
+    vkCmdBeginRenderPass(cmdBuffer->handle, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+    cmdBuffer->state = COMMAND_BUFFER_STATE_IN_RENDER_PASS;
 }
 
-void VulkanRenderpassEnd(vulkan_command_buffer* commandBuffer, vulkan_renderpass* renderpass)
+void VulkanRenderpassEnd(vulkan_command_buffer* cmdBuffer, vulkan_renderpass* renderpass)
 {
-    vkCmdEndRenderPass(commandBuffer->handle);
-    commandBuffer->state = COMMAND_BUFFER_STATE_RECORDING;
+    vkCmdEndRenderPass(cmdBuffer->handle);
+    cmdBuffer->state = COMMAND_BUFFER_STATE_RECORDING;
 }

@@ -11,6 +11,7 @@ b8 RendererBackendCreate(renderer_backend_type type, renderer_backend* outRender
         outRendererBackend->update_global_state = VulkanRendererUpdateGlobalState;
         outRendererBackend->end_frame = VulkanRendererBackendEndFrame;
         outRendererBackend->resized = VulkanRendererBackendOnResize;
+        outRendererBackend->update_object = VulkanBackendUpdateObject;
 
         return true;
     }
@@ -26,4 +27,5 @@ void RendererBackendDestroy(renderer_backend* rendererBackend)
     rendererBackend->update_global_state = 0;
     rendererBackend->end_frame = 0;
     rendererBackend->resized = 0;
+    rendererBackend->update_object = 0;
 }
