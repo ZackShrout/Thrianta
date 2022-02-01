@@ -833,17 +833,17 @@ TINLINE mat4 mat4_mul(mat4 matrix_0, mat4 matrix_1)
  * @param right The right side of the view frustum.
  * @param bottom The bottom side of the view frustum.
  * @param top The top side of the view frustum.
- * @param near_clip The near clipping plane distance.
- * @param far_clip The far clipping plane distance.
+ * @param nearClip The near clipping plane distance.
+ * @param farClip The far clipping plane distance.
  * @return A new orthographic projection matrix. 
  */
-TINLINE mat4 mat4_orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 near_clip, f32 far_clip)
+TINLINE mat4 mat4_orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 nearClip, f32 farClip)
 {
     mat4 out_matrix = mat4_identity();
 
     f32 lr = 1.0f / (left - right);
     f32 bt = 1.0f / (bottom - top);
-    f32 nf = 1.0f / (near_clip - far_clip);
+    f32 nf = 1.0f / (nearClip - farClip);
 
     out_matrix.data[0] = -2.0f * lr;
     out_matrix.data[5] = -2.0f * bt;
@@ -851,7 +851,7 @@ TINLINE mat4 mat4_orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 nea
 
     out_matrix.data[12] = (left + right) * lr;
     out_matrix.data[13] = (top + bottom) * bt;
-    out_matrix.data[14] = (far_clip + near_clip) * nf;
+    out_matrix.data[14] = (farClip + nearClip) * nf;
     return out_matrix;
 }
 
@@ -860,20 +860,20 @@ TINLINE mat4 mat4_orthographic(f32 left, f32 right, f32 bottom, f32 top, f32 nea
  * 
  * @param fov_radians The field of view in radians.
  * @param aspect_ratio The aspect ratio.
- * @param near_clip The near clipping plane distance.
- * @param far_clip The far clipping plane distance.
+ * @param nearClip The near clipping plane distance.
+ * @param farClip The far clipping plane distance.
  * @return A new perspective matrix. 
  */
-TINLINE mat4 mat4_perspective(f32 fov_radians, f32 aspect_ratio, f32 near_clip, f32 far_clip)
+TINLINE mat4 mat4_perspective(f32 fov_radians, f32 aspect_ratio, f32 nearClip, f32 farClip)
 {
     f32 half_tan_fov = ttan(fov_radians * 0.5f);
     mat4 out_matrix;
     TZeroMemory(out_matrix.data, sizeof(f32) * 16);
     out_matrix.data[0] = 1.0f / (aspect_ratio * half_tan_fov);
     out_matrix.data[5] = 1.0f / half_tan_fov;
-    out_matrix.data[10] = -((far_clip + near_clip) / (far_clip - near_clip));
+    out_matrix.data[10] = -((farClip + nearClip) / (farClip - nearClip));
     out_matrix.data[11] = -1.0f;
-    out_matrix.data[14] = -((2.0f * far_clip * near_clip) / (far_clip - near_clip));
+    out_matrix.data[14] = -((2.0f * farClip * nearClip) / (farClip - nearClip));
     return out_matrix;
 }
 

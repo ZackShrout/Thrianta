@@ -6,6 +6,10 @@
 
 typedef struct renderer_system_state {
     renderer_backend backend;
+    mat4 projection;
+    mat4 view;
+    f32 nearClip;
+    f32 farClip;
 } renderer_system_state;
 
 static renderer_system_state* statePtr;
@@ -26,6 +30,13 @@ b8 RendererSystemInitialize(u64* memoryRequirement, void* state, const char* app
         TFATAL("Renderer backend failed to initialize. Shutting down.");
         return false;
     }
+
+    statePtr->nearClip = 0.1f;
+    statePtr->farClip = 1000.0f;
+    statePtr->projection = mat4_perspective(deg_to_rad(45.0f), 1280 / 720.0f, statePtr->nearClip, statePtr->farClip);
+
+    statePtr->view = mat4_translation((vec3){0, 0, 30.0f});
+    statePtr->view = mat4_inverse(statePtr->view);
 
     return true;
 }
@@ -59,6 +70,7 @@ b8 RendererEndFrame(f32 dt)
 void RendererOnResized(u16 width, u16 height) {
     if (statePtr)
     {
+        statePtr->projection = mat4_perspective(deg_to_rad(45.0f), width / (f32)height, statePtr->nearClip, statePtr->farClip);
         statePtr->backend.resized(&statePtr->backend, width, height);
     }
     else
@@ -72,11 +84,7 @@ b8 RendererDrawFrame(render_packet* packet)
     // If the begin frame returned successfully, mid-frame operations may continue.
     if (RendererBeginFrame(packet->dt))
     {
-        mat4 projection = mat4_perspective(deg_to_rad(45.0f), 1280 / 720.0f, 0.1f, 1000.0f);
-        mat4 view = mat4_translation((vec3){0, 0, 30.0});
-        view = mat4_inverse(view);
-
-        statePtr->backend.update_global_state(projection, view, vec3_zero(), vec4_one(), 0);
+        statePtr->backend.update_global_state(statePtr->projection, statePtr->view, vec3_zero(), vec4_one(), 0);
 
         static f32 angle = 0.01f;
         angle += 0.1f;
@@ -95,4 +103,9 @@ b8 RendererDrawFrame(render_packet* packet)
     }
 
     return true;
+}
+
+void RendererSetView(mat4 view)
+{
+    statePtr->view = view;
 }
