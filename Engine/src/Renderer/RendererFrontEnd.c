@@ -109,3 +109,13 @@ void RendererSetView(mat4 view)
 {
     statePtr->view = view;
 }
+
+void RendererCreateTexture(const char* name, b8 autoRelease, s32 width, s32 height, s32 channelCount, const u8* pixels, b8 hasTransparency, struct texture* outTexture)
+{
+    statePtr->backend.create_texture(name, autoRelease, width, height, channelCount, pixels, hasTransparency, outTexture);
+}
+
+void RendererDestroyTexture(struct texture* texture)
+{
+    statePtr->backend.destroy_texture(texture);
+}

@@ -2,6 +2,7 @@
 
 #include "Defines.h"
 #include "Math/MathTypes.h"
+#include "Resources/ResourceTypes.h"
 
 typedef enum renderer_backend_type
 {
@@ -28,6 +29,16 @@ typedef struct renderer_backend
     void (*update_global_state)(mat4 projection, mat4 view, vec3 viewPosition, vec4 ambientColor, s32 mode);
     b8 (*end_frame)(struct renderer_backend* backend, f32 dt);   
     void (*update_object)(mat4 model);
+    void (*create_texture)(
+        const char* name, 
+        b8 auto_release, 
+        s32 width, 
+        s32 height, 
+        s32 channel_count, 
+        const u8* pixels, 
+        b8 hasTransparency, 
+        struct texture* outTexture);
+    void (*destroy_texture)(struct texture* texture);
 } renderer_backend;
 
 typedef struct render_packet
