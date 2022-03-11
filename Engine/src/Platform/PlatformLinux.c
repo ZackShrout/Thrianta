@@ -28,7 +28,7 @@
 // For surface creation
 #define VK_USE_PLATFORM_XCB_KHR
 #include <vulkan/vulkan.h>
-#include "renderer/vulkan/vulkan_types.inl"
+#include "Renderer/Vulkan/VulkanTypes.inl"
 
 typedef struct platform_state
 {
